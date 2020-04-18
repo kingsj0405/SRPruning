@@ -10,7 +10,11 @@ import tensorflow as tf
 import tensorlayer as tl
 from tqdm import tqdm
 from model import get_G, get_D
-from config import config
+from config import config, log_config
+
+# NOTE: https://github.com/python-pillow/Pillow/issues/1510#issuecomment-151458026
+from PIL import ImageFile
+ImageFile.LOAD_TRUNCATED_IMAGES = True
 
 ###====================== HYPER-PARAMETERS ===========================###
 ## Adam
@@ -19,23 +23,31 @@ lr_init = config.TRAIN.lr_init
 beta1 = config.TRAIN.beta1
 ## initialize G
 n_epoch_init = config.TRAIN.n_epoch_init
+lr_decay_init = config.TRAIN.lr_decay_init
+decay_every_init = config.TRAIN.decay_every_init
 ## adversarial learning (SRGAN)
 n_epoch = config.TRAIN.n_epoch
 lr_decay = config.TRAIN.lr_decay
 decay_every = config.TRAIN.decay_every
 shuffle_buffer_size = 128
+step_size = int((800 - 1) / batch_size) + 1
 
 # ni = int(np.sqrt(batch_size))
 
 # create folders to save result images and trained models
+if os.path.exists(config.SAVE.cfg_file_path):
+    print(f"There is {config.SAVE.cfg_file_path} already")
+    print(f"Close experiment")
+    exit(0)
+log_config(config.SAVE.cfg_file_path, config)
 exp_name = config.SAVE.exp_name
 save_dir = config.SAVE.save_dir
 checkpoint_dir = config.SAVE.checkpoint_dir
 summary_dir = config.SAVE.summary_dir
-tl.files.exists_or_mkdir(exp_name)
 tl.files.exists_or_mkdir(save_dir)
 tl.files.exists_or_mkdir(checkpoint_dir)
 tl.files.exists_or_mkdir(summary_dir)
+tl.files.exists_or_mkdir(config.SAVE.cfg_dir)
 
 def get_train_data():
     # load dataset
@@ -79,7 +91,7 @@ def train():
     G = get_G((batch_size, 96, 96, 3))
     D = get_D((batch_size, 384, 384, 3))
     VGG = tl.models.vgg19(pretrained=True, end_with='pool4', mode='static')
-    writer = tf.summary.create_fil_writer(summary_dir)
+    writer = tf.summary.create_file_writer(summary_dir)
 
     lr_v = tf.Variable(lr_init)
     g_optimizer_init = tf.optimizers.Adam(lr_v, beta_1=beta1)
@@ -93,10 +105,11 @@ def train():
     train_ds = get_train_data()
 
     ## initialize learning (G)
+    print("Start init G")
     step_base = 0
     n_step_epoch = round(n_epoch_init // batch_size)
-    for epoch in tqdm(range(n_epoch_init)):
-        for step, (lr_patchs, hr_patchs) in enumerate(train_ds):
+    for epoch in tqdm(range(n_epoch_init), desc='epoch init learn', dynamic_ncols=True, position=0):
+        for step, (lr_patchs, hr_patchs) in enumerate(tqdm(train_ds, desc='step', dynamic_ncols=True, total=step_size, position=1)):
             if lr_patchs.shape[0] != batch_size: # if the remaining data in this epoch < batch_size
                 break
             step_time = time.time()
@@ -108,17 +121,28 @@ def train():
             # print("Epoch: [{}/{}] step: [{}/{}] time: {:.3f}s, mse: {:.3f} ".format(
             #     epoch, n_epoch_init, step, n_step_epoch, time.time() - step_time, mse_loss))
             with writer.as_default():
-                tf.summary.scalar("mse_loss", mse_loss, step=step_base + step)
+                tf.summary.scalar("mse_loss", mse_loss, step=step_base+step)
+                tf.summary.image("training example", lr_patchs, max_outputs=3, step=step_base+step)
+                tf.summary.image("generated output", fake_hr_patchs, max_outputs=3, step=step_base+step)
                 writer.flush()
         step_base += step
-        if (epoch != 0) and (epoch % 10 == 0):
-            tl.vis.save_images(fake_hr_patchs.numpy(), [2, 4], os.path.join(save_dir, 'train_g_init_{}.png'.format(epoch)))
+        # update the learning rate
+        if epoch != 0 and (epoch % decay_every_init == 0):
+            new_lr_decay = lr_decay_init**(epoch // decay_every_init)
+            lr_v.assign(lr_init * new_lr_decay)
+            log = " ** new learning rate: %f (for GAN)" % (lr_init * new_lr_decay)
+            print(log)
+        if epoch % 10 == 0:
+            tl.vis.save_images(fake_hr_patchs.numpy(), config.TRAIN.grid, os.path.join(save_dir, 'train_g_init_{}.png'.format(epoch)))
     print("Finish init G")
+    G.save_weights(os.path.join(checkpoint_dir, 'g_init.h5'))
+    print("Initialized G is saved")
 
     ## adversarial learning (G, D)
+    print("Start adv learning G and D")
     n_step_epoch = round(n_epoch // batch_size)
-    for epoch in tqdm(range(n_epoch)):
-        for step, (lr_patchs, hr_patchs) in enumerate(train_ds):
+    for epoch in tqdm(range(n_epoch), desc='epoch adv learn', dynamic_ncols=True, position=0):
+        for step, (lr_patchs, hr_patchs) in enumerate(tqdm(train_ds, desc='step', dynamic_ncols=True, total=step_size, position=1)):
             if lr_patchs.shape[0] != batch_size: # if the remaining data in this epoch < batch_size
                 break
             step_time = time.time()
@@ -158,11 +182,11 @@ def train():
             lr_v.assign(lr_init * new_lr_decay)
             log = " ** new learning rate: %f (for GAN)" % (lr_init * new_lr_decay)
             print(log)
-
-        if (epoch % 10 == 0):
-            tl.vis.save_images(fake_patchs.numpy(), [2, 4], os.path.join(save_dir, 'train_g_{}.png'.format(epoch)))
-            G.save_weights(os.path.join(checkpoint_dir, 'g.h5'))
-            D.save_weights(os.path.join(checkpoint_dir, 'd.h5'))
+        if epoch % 100 == 0:
+            tl.vis.save_images(fake_patchs.numpy(), config.TRAIN.grid, os.path.join(save_dir, 'train_g_{}.png'.format(epoch)))
+            G.save_weights(os.path.join(checkpoint_dir, 'g_{}.h5'.format(epoch)))
+            D.save_weights(os.path.join(checkpoint_dir, 'd_{}.h5'.format(epoch)))
+    print("Finish adv learning G and D")
 
 def evaluate():
     ###====================== PRE-LOAD DATA ===========================###
