@@ -2,7 +2,6 @@
 *.pyc
 .DS_Store
 *.npz
-sample/
-samples/
-checkpoint/
 __pycache__/
+REWIND/
+models/

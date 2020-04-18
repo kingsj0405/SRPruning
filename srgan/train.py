@@ -8,6 +8,7 @@ import numpy as np
 import scipy, multiprocessing
 import tensorflow as tf
 import tensorlayer as tl
+from tqdm import tqdm
 from model import get_G, get_D
 from config import config
 
@@ -27,10 +28,14 @@ shuffle_buffer_size = 128
 # ni = int(np.sqrt(batch_size))
 
 # create folders to save result images and trained models
-save_dir = "samples"
+exp_name = config.SAVE.exp_name
+save_dir = config.SAVE.save_dir
+checkpoint_dir = config.SAVE.checkpoint_dir
+summary_dir = config.SAVE.summary_dir
+tl.files.exists_or_mkdir(exp_name)
 tl.files.exists_or_mkdir(save_dir)
-checkpoint_dir = "models"
 tl.files.exists_or_mkdir(checkpoint_dir)
+tl.files.exists_or_mkdir(summary_dir)
 
 def get_train_data():
     # load dataset
@@ -74,6 +79,7 @@ def train():
     G = get_G((batch_size, 96, 96, 3))
     D = get_D((batch_size, 384, 384, 3))
     VGG = tl.models.vgg19(pretrained=True, end_with='pool4', mode='static')
+    writer = tf.summary.create_fil_writer(summary_dir)
 
     lr_v = tf.Variable(lr_init)
     g_optimizer_init = tf.optimizers.Adam(lr_v, beta_1=beta1)
@@ -87,8 +93,9 @@ def train():
     train_ds = get_train_data()
 
     ## initialize learning (G)
+    step_base = 0
     n_step_epoch = round(n_epoch_init // batch_size)
-    for epoch in range(n_epoch_init):
+    for epoch in tqdm(range(n_epoch_init)):
         for step, (lr_patchs, hr_patchs) in enumerate(train_ds):
             if lr_patchs.shape[0] != batch_size: # if the remaining data in this epoch < batch_size
                 break
@@ -98,14 +105,19 @@ def train():
                 mse_loss = tl.cost.mean_squared_error(fake_hr_patchs, hr_patchs, is_mean=True)
             grad = tape.gradient(mse_loss, G.trainable_weights)
             g_optimizer_init.apply_gradients(zip(grad, G.trainable_weights))
-            print("Epoch: [{}/{}] step: [{}/{}] time: {:.3f}s, mse: {:.3f} ".format(
-                epoch, n_epoch_init, step, n_step_epoch, time.time() - step_time, mse_loss))
+            # print("Epoch: [{}/{}] step: [{}/{}] time: {:.3f}s, mse: {:.3f} ".format(
+            #     epoch, n_epoch_init, step, n_step_epoch, time.time() - step_time, mse_loss))
+            with writer.as_default():
+                tf.summary.scalar("mse_loss", mse_loss, step=step_base + step)
+                writer.flush()
+        step_base += step
         if (epoch != 0) and (epoch % 10 == 0):
             tl.vis.save_images(fake_hr_patchs.numpy(), [2, 4], os.path.join(save_dir, 'train_g_init_{}.png'.format(epoch)))
+    print("Finish init G")
 
     ## adversarial learning (G, D)
     n_step_epoch = round(n_epoch // batch_size)
-    for epoch in range(n_epoch):
+    for epoch in tqdm(range(n_epoch)):
         for step, (lr_patchs, hr_patchs) in enumerate(train_ds):
             if lr_patchs.shape[0] != batch_size: # if the remaining data in this epoch < batch_size
                 break
@@ -127,8 +139,18 @@ def train():
             g_optimizer.apply_gradients(zip(grad, G.trainable_weights))
             grad = tape.gradient(d_loss, D.trainable_weights)
             d_optimizer.apply_gradients(zip(grad, D.trainable_weights))
-            print("Epoch: [{}/{}] step: [{}/{}] time: {:.3f}s, g_loss(mse:{:.3f}, vgg:{:.3f}, adv:{:.3f}) d_loss: {:.3f}".format(
-                epoch, n_epoch_init, step, n_step_epoch, time.time() - step_time, mse_loss, vgg_loss, g_gan_loss, d_loss))
+            # print("Epoch: [{}/{}] step: [{}/{}] time: {:.3f}s, g_loss(mse:{:.3f}, vgg:{:.3f}, adv:{:.3f}) d_loss: {:.3f}".format(
+            #     epoch, n_epoch_init, step, n_step_epoch, time.time() - step_time, mse_loss, vgg_loss, g_gan_loss, d_loss))
+            with writer.as_default():
+                tf.summary.scalar("mse_loss", mse_loss, step=step_base + step)
+                tf.summary.scalar("vgg_loss", vgg_loss, step=step_base + step)
+                tf.summary.scalar("g_gan_loss", g_gan_loss, step=step_base + step)
+                tf.summary.scalar("d1_loss(real)", d1_loss, step=step_base + step)
+                tf.summary.scalar("d2_loss(fake)", d2_loss, step=step_base + step)
+                tf.summary.scalar("d_loss", d_loss, step=step_base + step)
+                tf.summary.scalar("g_loss(mse_loss + vgg_loss + g_gan_loss)", g_loss, step=step_base + step)
+                writer.flush()
+        step_base += step
 
         # update the learning rate
         if epoch != 0 and (epoch % decay_every == 0):
@@ -137,7 +159,7 @@ def train():
             log = " ** new learning rate: %f (for GAN)" % (lr_init * new_lr_decay)
             print(log)
 
-        if (epoch != 0) and (epoch % 10 == 0):
+        if (epoch % 10 == 0):
             tl.vis.save_images(fake_patchs.numpy(), [2, 4], os.path.join(save_dir, 'train_g_{}.png'.format(epoch)))
             G.save_weights(os.path.join(checkpoint_dir, 'g.h5'))
             D.save_weights(os.path.join(checkpoint_dir, 'd.h5'))
