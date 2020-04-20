@@ -133,6 +133,7 @@ def train():
             log = " ** new learning rate: %f (for GAN)" % (lr_init * new_lr_decay)
             print(log)
         if epoch % 10 == 0:
+            G.save_weights(os.path.join(checkpoint_dir, 'g_init_{}.h5'.format(epoch)))
             tl.vis.save_images(fake_hr_patchs.numpy(), config.TRAIN.grid, os.path.join(save_dir, 'train_g_init_{}.png'.format(epoch)))
     print("Finish init G")
     G.save_weights(os.path.join(checkpoint_dir, 'g_init.h5'))

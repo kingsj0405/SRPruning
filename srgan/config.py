@@ -5,9 +5,9 @@ config = edict()
 config.TRAIN = edict()
 
 ## Adam
-config.TRAIN.batch_size = 64 # [16] use 8 if your GPU memory is small, and use [2, 4] in tl.vis.save_images / use 16 for faster training
-config.TRAIN.grid = [8, 8]
-config.TRAIN.lr_init = 1e-4
+config.TRAIN.batch_size = 16 # [16] use 8 if your GPU memory is small, and use [2, 4] in tl.vis.save_images / use 16 for faster training
+config.TRAIN.grid = [4, 4]
+config.TRAIN.lr_init = 1e-6
 config.TRAIN.beta1 = 0.9
 
 ## initialize G
@@ -31,8 +31,8 @@ config.VALID.lr_img_path = '../../dataset/DIV2K/DIV2K_valid_LR_bicubic/X4/'
 
 ## save location
 config.SAVE = edict()
-config.SAVE.exp_name = '../../REWIND'
-config.SAVE.exp_version = 'v3'
+config.SAVE.exp_name = '../../REWIND-srgan'
+config.SAVE.exp_version = 'v8'
 config.SAVE.cfg_dir = f'{config.SAVE.exp_name}/configs/'
 config.SAVE.cfg_file_path = f'{config.SAVE.exp_name}/configs/{config.SAVE.exp_version}.cfg'
 config.SAVE.save_dir = f"{config.SAVE.exp_name}/samples/{config.SAVE.exp_version}"
