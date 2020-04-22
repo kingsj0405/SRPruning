@@ -103,6 +103,7 @@ def train():
 
     train_ds = get_train_data()
 
+    step_base = 0
     ## initialize learning (G)
     if config.TRAIN.load_init:
         G.load_weights(config.LOAD.load_init_path)
@@ -110,7 +111,6 @@ def train():
         init_g()
     def init_g():
         print("Start init G")
-        step_base = 0
         n_step_epoch = round(n_epoch_init // batch_size)
         for epoch in tqdm(range(n_epoch_init), desc='epoch init learn', dynamic_ncols=True, position=0):
             for step, (lr_patchs, hr_patchs) in enumerate(tqdm(train_ds, desc='step', dynamic_ncols=True, total=step_size, position=1)):
