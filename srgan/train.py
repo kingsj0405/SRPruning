@@ -34,19 +34,10 @@ step_size = int((800 - 1) / batch_size) + 1
 
 # ni = int(np.sqrt(batch_size))
 
-# create folders to save result images and trained models
-if os.path.exists(config.SAVE.cfg_file_path):
-    print(f"There is {config.SAVE.cfg_file_path} already")
-    print(f"Close experiment")
-    exit(0)
 log_config(config.SAVE.cfg_file_path, config)
 save_dir = config.SAVE.save_dir
 checkpoint_dir = config.SAVE.checkpoint_dir
 summary_dir = config.SAVE.summary_dir
-tl.files.exists_or_mkdir(save_dir)
-tl.files.exists_or_mkdir(checkpoint_dir)
-tl.files.exists_or_mkdir(summary_dir)
-tl.files.exists_or_mkdir(config.SAVE.cfg_dir)
 
 def get_train_data():
     # load dataset
@@ -154,18 +145,22 @@ def train():
             with tf.GradientTape(persistent=True) as tape:
                 fake_patchs = G(lr_patchs)
                 logits_fake = D(fake_patchs)
-                logits_real = D(hr_patchs)
                 feature_fake = VGG((fake_patchs+1)/2.) # the pre-trained VGG uses the input range of [0, 1]
                 feature_real = VGG((hr_patchs+1)/2.)
-                d_loss1 = tl.cost.sigmoid_cross_entropy(logits_real, tf.ones_like(logits_real))
-                d_loss2 = tl.cost.sigmoid_cross_entropy(logits_fake, tf.zeros_like(logits_fake))
-                d_loss = d_loss1 + d_loss2
                 g_gan_loss = 1e-3 * tl.cost.sigmoid_cross_entropy(logits_fake, tf.ones_like(logits_fake))
                 mse_loss = tl.cost.mean_squared_error(fake_patchs, hr_patchs, is_mean=True)
                 vgg_loss = 2e-6 * tl.cost.mean_squared_error(feature_fake, feature_real, is_mean=True)
                 g_loss = mse_loss + vgg_loss + g_gan_loss
             grad = tape.gradient(g_loss, G.trainable_weights)
             g_optimizer.apply_gradients(zip(grad, G.trainable_weights))
+            with tf.GradientTape(persistent=True) as tape:
+                fake_patchs = G(lr_patchs)
+                fake_patchs.detach()
+                logits_fake = D(fake_patchs)
+                logits_real = D(hr_patchs)
+                d_loss1 = tl.cost.sigmoid_cross_entropy(logits_real, tf.ones_like(logits_real))
+                d_loss2 = tl.cost.sigmoid_cross_entropy(logits_fake, tf.zeros_like(logits_fake))
+                d_loss = d_loss1 + d_loss2
             grad = tape.gradient(d_loss, D.trainable_weights)
             d_optimizer.apply_gradients(zip(grad, D.trainable_weights))
             # print("Epoch: [{}/{}] step: [{}/{}] time: {:.3f}s, g_loss(mse:{:.3f}, vgg:{:.3f}, adv:{:.3f}) d_loss: {:.3f}".format(
@@ -178,6 +173,9 @@ def train():
                 tf.summary.scalar("d2_loss(fake)", d_loss2, step=step_base + step)
                 tf.summary.scalar("d_loss", d_loss, step=step_base + step)
                 tf.summary.scalar("g_loss(mse_loss + vgg_loss + g_gan_loss)", g_loss, step=step_base + step)
+                tf.summary.image("training example", lr_patchs, max_outputs=3, step=step_base+step)
+                tf.summary.image("generated output", fake_patchs, max_outputs=3, step=step_base+step)
+                tf.summary.image("ground truth", hr_patchs, max_outputs=3, step=step_base+step)
                 writer.flush()
         step_base += step
 
@@ -250,8 +248,18 @@ if __name__ == '__main__':
     tl.global_flag['mode'] = args.mode
 
     if tl.global_flag['mode'] == 'srgan':
+        if os.path.exists(config.SAVE.cfg_file_path):
+            print(f"There is {config.SAVE.cfg_file_path} already")
+            print(f"Close experiment")
+            exit(0)
+        tl.files.exists_or_mkdir(save_dir)
+        tl.files.exists_or_mkdir(checkpoint_dir)
+        tl.files.exists_or_mkdir(summary_dir)
+        tl.files.exists_or_mkdir(config.SAVE.cfg_dir)
         train()
     elif tl.global_flag['mode'] == 'evaluate':
         evaluate()
+    elif tl.global_flag['mode'] == 'test':
+        test()
     else:
         raise Exception("Unknow --mode")

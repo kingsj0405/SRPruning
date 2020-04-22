@@ -5,9 +5,9 @@ config = edict()
 config.TRAIN = edict()
 
 ## Adam
-config.TRAIN.batch_size = 4 # [16] use 8 if your GPU memory is small, and use [2, 4] in tl.vis.save_images / use 16 for faster training
-config.TRAIN.grid = [2, 2]
-config.TRAIN.lr_init = 1e-4
+config.TRAIN.batch_size = 8 # [16] use 8 if your GPU memory is small, and use [2, 4] in tl.vis.save_images / use 16 for faster training
+config.TRAIN.grid = [2, 4]
+config.TRAIN.lr_init = 1e-6
 config.TRAIN.beta1 = 0.9
 
 ## initialize G
@@ -33,7 +33,7 @@ config.VALID.lr_img_path = '../../dataset/DIV2K/DIV2K_valid_LR_bicubic/X4/'
 ## save location
 config.SAVE = edict()
 config.SAVE.exp_path = '../../REWIND-srgan'
-config.SAVE.exp_version = 'v11'
+config.SAVE.exp_version = 'v18'
 config.SAVE.cfg_dir = f'{config.SAVE.exp_path}/configs/'
 config.SAVE.cfg_file_path = f'{config.SAVE.exp_path}/configs/{config.SAVE.exp_version}.cfg'
 config.SAVE.save_dir = f"{config.SAVE.exp_path}/samples/{config.SAVE.exp_version}"
@@ -42,7 +42,7 @@ config.SAVE.summary_dir = f"{config.SAVE.exp_path}/summary/{config.SAVE.exp_vers
 
 ## load location
 config.LOAD = edict()
-config.LOAD.load_init_path = f'{config.SAVE.exp_path}/checkpoint/v10/g_init_60.h5'
+config.LOAD.load_init_path = f'{config.SAVE.exp_path}/checkpoint/v10/g_init_50.h5'
 
 def log_config(filename, cfg):
     with open(filename, 'w') as f:
