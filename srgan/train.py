@@ -40,7 +40,6 @@ if os.path.exists(config.SAVE.cfg_file_path):
     print(f"Close experiment")
     exit(0)
 log_config(config.SAVE.cfg_file_path, config)
-exp_name = config.SAVE.exp_name
 save_dir = config.SAVE.save_dir
 checkpoint_dir = config.SAVE.checkpoint_dir
 summary_dir = config.SAVE.summary_dir
@@ -105,39 +104,44 @@ def train():
     train_ds = get_train_data()
 
     ## initialize learning (G)
-    print("Start init G")
-    step_base = 0
-    n_step_epoch = round(n_epoch_init // batch_size)
-    for epoch in tqdm(range(n_epoch_init), desc='epoch init learn', dynamic_ncols=True, position=0):
-        for step, (lr_patchs, hr_patchs) in enumerate(tqdm(train_ds, desc='step', dynamic_ncols=True, total=step_size, position=1)):
-            if lr_patchs.shape[0] != batch_size: # if the remaining data in this epoch < batch_size
-                break
-            step_time = time.time()
-            with tf.GradientTape() as tape:
-                fake_hr_patchs = G(lr_patchs)
-                mse_loss = tl.cost.mean_squared_error(fake_hr_patchs, hr_patchs, is_mean=True)
-            grad = tape.gradient(mse_loss, G.trainable_weights)
-            g_optimizer_init.apply_gradients(zip(grad, G.trainable_weights))
-            # print("Epoch: [{}/{}] step: [{}/{}] time: {:.3f}s, mse: {:.3f} ".format(
-            #     epoch, n_epoch_init, step, n_step_epoch, time.time() - step_time, mse_loss))
-            with writer.as_default():
-                tf.summary.scalar("mse_loss", mse_loss, step=step_base+step)
-                tf.summary.image("training example", lr_patchs, max_outputs=3, step=step_base+step)
-                tf.summary.image("generated output", fake_hr_patchs, max_outputs=3, step=step_base+step)
-                writer.flush()
-        step_base += step
-        # update the learning rate
-        if epoch != 0 and (epoch % decay_every_init == 0):
-            new_lr_decay = lr_decay_init**(epoch // decay_every_init)
-            lr_v.assign(lr_init * new_lr_decay)
-            log = " ** new learning rate: %f (for GAN)" % (lr_init * new_lr_decay)
-            print(log)
-        if epoch % 10 == 0:
-            G.save_weights(os.path.join(checkpoint_dir, 'g_init_{}.h5'.format(epoch)))
-            tl.vis.save_images(fake_hr_patchs.numpy(), config.TRAIN.grid, os.path.join(save_dir, 'train_g_init_{}.png'.format(epoch)))
-    print("Finish init G")
-    G.save_weights(os.path.join(checkpoint_dir, 'g_init.h5'))
-    print("Initialized G is saved")
+    if config.TRAIN.load_init:
+        G.load_weights(config.LOAD.load_init_path)
+    else:
+        init_g()
+    def init_g():
+        print("Start init G")
+        step_base = 0
+        n_step_epoch = round(n_epoch_init // batch_size)
+        for epoch in tqdm(range(n_epoch_init), desc='epoch init learn', dynamic_ncols=True, position=0):
+            for step, (lr_patchs, hr_patchs) in enumerate(tqdm(train_ds, desc='step', dynamic_ncols=True, total=step_size, position=1)):
+                if lr_patchs.shape[0] != batch_size: # if the remaining data in this epoch < batch_size
+                    break
+                step_time = time.time()
+                with tf.GradientTape() as tape:
+                    fake_hr_patchs = G(lr_patchs)
+                    mse_loss = tl.cost.mean_squared_error(fake_hr_patchs, hr_patchs, is_mean=True)
+                grad = tape.gradient(mse_loss, G.trainable_weights)
+                g_optimizer_init.apply_gradients(zip(grad, G.trainable_weights))
+                # print("Epoch: [{}/{}] step: [{}/{}] time: {:.3f}s, mse: {:.3f} ".format(
+                #     epoch, n_epoch_init, step, n_step_epoch, time.time() - step_time, mse_loss))
+                with writer.as_default():
+                    tf.summary.scalar("mse_loss", mse_loss, step=step_base+step)
+                    tf.summary.image("training example", lr_patchs, max_outputs=3, step=step_base+step)
+                    tf.summary.image("generated output", fake_hr_patchs, max_outputs=3, step=step_base+step)
+                    writer.flush()
+            step_base += step
+            # update the learning rate
+            if epoch != 0 and (epoch % decay_every_init == 0):
+                new_lr_decay = lr_decay_init**(epoch // decay_every_init)
+                lr_v.assign(lr_init * new_lr_decay)
+                log = " ** new learning rate: %f (for GAN)" % (lr_init * new_lr_decay)
+                print(log)
+            if epoch % 10 == 0:
+                G.save_weights(os.path.join(checkpoint_dir, 'g_init_{}.h5'.format(epoch)))
+                tl.vis.save_images(fake_hr_patchs.numpy(), config.TRAIN.grid, os.path.join(save_dir, 'train_g_init_{}.png'.format(epoch)))
+        print("Finish init G")
+        G.save_weights(os.path.join(checkpoint_dir, 'g_init.h5'))
+        print("Initialized G is saved")
 
     ## adversarial learning (G, D)
     print("Start adv learning G and D")
