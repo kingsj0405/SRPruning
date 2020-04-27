@@ -6,8 +6,13 @@ import torch.nn as nn
 import torch.optim as optim
 from torch.autograd import Variable
 from torch.utils.data import DataLoader
+from torch.utils.tensorboard import SummaryWriter
+from torchvision.utils import save_image
+from torchvision import transforms
+from tqdm import tqdm
 from vdsr import Net
-from dataset import DatasetFromHdf5
+from dataset import DatasetFromHdf5, DatasetFromDIV2K
+from config import config
 
 # Training settings
 parser = argparse.ArgumentParser(description="PyTorch VDSR")
@@ -26,9 +31,10 @@ parser.add_argument('--pretrained', default='', type=str, help='path to pretrain
 parser.add_argument("--gpus", default="0", type=str, help="gpu ids (default: 0)")
 
 def main():
-    global opt, model
+    global opt, model, step, writer
     opt = parser.parse_args()
     print(opt)
+    step = 0
 
     cuda = opt.cuda
     if cuda:
@@ -46,8 +52,23 @@ def main():
     cudnn.benchmark = True
 
     print("===> Loading datasets")
-    train_set = DatasetFromHdf5("data/train.h5")
-    training_data_loader = DataLoader(dataset=train_set, num_workers=opt.threads, batch_size=opt.batchSize, shuffle=True)
+    # train_set = DatasetFromHdf5(config.DATA.train_db_path)
+    sr_size = config.DATA.sr_size
+    train_set = DatasetFromDIV2K(train_dirpath=config.DATA.train_lr_path, label_dirpath=config.DATA.train_hr_path,
+                                 train_transform=transforms.Compose([
+                                     transforms.RandomCrop([sr_size / 4, sr_size / 4]),
+                                     transforms.Resize([sr_size, sr_size]),
+                                     transforms.RandomHorizontalFlip(),
+                                     transforms.ToTensor(),
+                                     transforms.Normalize((127.5, 127.5, 127.5), (127.5, 127.5, 127.5))
+                                 ]),
+                                 label_transform=transforms.Compose([
+                                     transforms.RandomCrop([sr_size, sr_size]),
+                                     transforms.RandomHorizontalFlip(),
+                                     transforms.ToTensor(),
+                                     transforms.Normalize((127.5, 127.5, 127.5), (127.5, 127.5, 127.5))
+                                 ]))
+    training_data_loader = DataLoader(dataset=train_set, num_workers=opt.threads, batch_size=config.TRAIN.batch_size, shuffle=True)
 
     print("===> Building model")
     model = Net()
@@ -71,7 +92,7 @@ def main():
     # optionally copy weights from a checkpoint
     if opt.pretrained:
         if os.path.isfile(opt.pretrained):
-            print("=> loading model '{}'".format(opt.pretrained))
+
             weights = torch.load(opt.pretrained)
             model.load_state_dict(weights['model'].state_dict())
         else:
@@ -81,8 +102,9 @@ def main():
     optimizer = optim.SGD(model.parameters(), lr=opt.lr, momentum=opt.momentum, weight_decay=opt.weight_decay)
 
     print("===> Training")
-    for epoch in range(opt.start_epoch, opt.nEpochs + 1):
-        train(training_data_loader, optimizer, model, criterion, epoch)
+    writer = SummaryWriter(config.SAVE.summary_dir)
+    for epoch in tqdm(range(opt.start_epoch, opt.nEpochs + 1), position=0, dynamic_ncols=True):
+        train(training_data_loader, optimizer, model, criterion, epoch, writer)
         save_checkpoint(model, epoch)
 
 def adjust_learning_rate(optimizer, epoch):
@@ -90,41 +112,46 @@ def adjust_learning_rate(optimizer, epoch):
     lr = opt.lr * (0.1 ** (epoch // opt.step))
     return lr
 
-def train(training_data_loader, optimizer, model, criterion, epoch):
+def train(training_data_loader, optimizer, model, criterion, epoch, writer):
+    global step
     lr = adjust_learning_rate(optimizer, epoch-1)
 
     for param_group in optimizer.param_groups:
         param_group["lr"] = lr
 
-    print("Epoch = {}, lr = {}".format(epoch, optimizer.param_groups[0]["lr"]))
+    # print("Epoch = {}, lr = {}".format(epoch, optimizer.param_groups[0]["lr"]))
 
     model.train()
 
-    for iteration, batch in enumerate(training_data_loader, 1):
-        input, target = Variable(batch[0]), Variable(batch[1], requires_grad=False)
+    for iteration, batch in enumerate(tqdm(training_data_loader, position=1, dynamic_ncols=True), 1):
+        train_img, label_img = Variable(batch[0]), Variable(batch[1], requires_grad=False)
 
         if opt.cuda:
-            input = input.cuda()
-            target = target.cuda()
+            train_img = input.cuda()
+            label_img = target.cuda()
 
-        loss = criterion(model(input), target)
+        output = model(train_img)
+        loss = criterion(output, label_img)
         optimizer.zero_grad()
         loss.backward() 
         nn.utils.clip_grad_norm(model.parameters(),opt.clip) 
         optimizer.step()
 
-        if iteration%100 == 0:
-            print("===> Epoch[{}]({}/{}): Loss: {:.10f}".format(epoch, iteration, len(training_data_loader), loss.data[0]))
+        if ((iteration - 1) % 100 == 0):
+            # print("===> Epoch[{}]({}/{}): Loss: {:.10f}".format(epoch, iteration, len(training_data_loader), loss.data[0]))
+            writer.add_scalar('MSE', loss, global_step=step)
+            writer.add_scalar('learning_rate', lr, global_step=step)
+            writer.add_images('output', output * 127.5 + 127.5, global_step=step)
+            writer.add_images('label_img', target * 127.5 + 127.5, global_step=step)
+            writer.add_images('train_img', input * 127.5 + 127.5, global_step=step)
+            save_image(output * 127.5 + 127.5, f"{config.SAVE.save_dir}/train_{step}.png")
+        step += 1
 
 def save_checkpoint(model, epoch):
-    model_out_path = "checkpoint/" + "model_epoch_{}.pth".format(epoch)
+    model_out_path = f"{config.SAVE.checkpoint_dir}/model_epoch_{epoch}.pth"
     state = {"epoch": epoch ,"model": model}
-    if not os.path.exists("checkpoint/"):
-        os.makedirs("checkpoint/")
-
     torch.save(state, model_out_path)
-
-    print("Checkpoint saved to {}".format(model_out_path))
+    # print("Checkpoint saved to {}".format(model_out_path))
 
 if __name__ == "__main__":
     main()

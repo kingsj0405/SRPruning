@@ -1,8 +1,7 @@
 clear;close all;
 
-folder = 'path/to/train/folder';
-
-savepath = 'train.h5';
+folder = '../../../dataset/291/img';
+savepath = '../../../dataset/291/train_own.h5';
 size_input = 41;
 size_label = 41;
 stride = 41;
@@ -23,6 +22,7 @@ margain = 0;
 filepaths = [];
 filepaths = [filepaths; dir(fullfile(folder, '*.jpg'))];
 filepaths = [filepaths; dir(fullfile(folder, '*.bmp'))];
+filepaths = [filepaths; dir(fullfile(folder, '*.png'))];
 
 for i = 1 : length(filepaths)
     for flip = 1: 3
@@ -90,4 +90,4 @@ for batchno = 1:floor(count/chunksz)
     totalct = curr_dat_sz(end);
 end
 
-h5disp(savepath);
+# h5disp(savepath);
