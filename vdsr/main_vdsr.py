@@ -127,8 +127,8 @@ def train(training_data_loader, optimizer, model, criterion, epoch, writer):
         train_img, label_img = Variable(batch[0]), Variable(batch[1], requires_grad=False)
 
         if opt.cuda:
-            train_img = input.cuda()
-            label_img = target.cuda()
+            train_img = train_img.cuda()
+            label_img = label_img.cuda()
 
         output = model(train_img)
         loss = criterion(output, label_img)
@@ -142,8 +142,8 @@ def train(training_data_loader, optimizer, model, criterion, epoch, writer):
             writer.add_scalar('MSE', loss, global_step=step)
             writer.add_scalar('learning_rate', lr, global_step=step)
             writer.add_images('output', output * 127.5 + 127.5, global_step=step)
-            writer.add_images('label_img', target * 127.5 + 127.5, global_step=step)
-            writer.add_images('train_img', input * 127.5 + 127.5, global_step=step)
+            writer.add_images('label_img', label_img * 127.5 + 127.5, global_step=step)
+            writer.add_images('train_img', train_img * 127.5 + 127.5, global_step=step)
             save_image(output * 127.5 + 127.5, f"{config.SAVE.save_dir}/train_{step}.png")
         step += 1
 

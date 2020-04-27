@@ -7,7 +7,7 @@ config = edict()
 # save configuration
 config.SAVE = edict()
 config.SAVE.exp_path = '../../REWIND-vdsr'
-config.SAVE.exp_version = 'v4'
+config.SAVE.exp_version = 'v5'
 config.SAVE.cfg_dir = f'{config.SAVE.exp_path}/configs/'
 config.SAVE.cfg_file_path = f'{config.SAVE.exp_path}/configs/{config.SAVE.exp_version}.cfg'
 config.SAVE.save_dir = f"{config.SAVE.exp_path}/samples/{config.SAVE.exp_version}"
