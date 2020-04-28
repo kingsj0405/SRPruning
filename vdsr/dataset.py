@@ -42,10 +42,6 @@ class DatasetFromDIV2K(data.Dataset):
         if self.all_transform is not None:
             train_img = self.all_transform(train_img)
             label_img = self.all_transform(label_img)
-        # Return
-        # print(f"Read {self.train_list[index]} and {self.label_list[index]}")
-        # print(f"train_img: {train_img.min(), train_img.max()}")
-        # print(f"label_img: {label_img.min(), label_img.max()}")
         return train_img, label_img
     
     def __len__(self):

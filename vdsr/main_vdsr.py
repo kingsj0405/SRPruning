@@ -1,14 +1,13 @@
 import argparse, os
 import torch
-import random
 import torch.backends.cudnn as cudnn
 import torch.nn as nn
 import torch.optim as optim
 from torch.autograd import Variable
 from torch.utils.data import DataLoader
 from torch.utils.tensorboard import SummaryWriter
-from torchvision.utils import save_image
 from torchvision import transforms
+from torchvision.utils import save_image
 from tqdm import tqdm
 from vdsr import Net
 from dataset import DatasetFromHdf5, DatasetFromDIV2K
@@ -41,9 +40,9 @@ def main():
         print("=> use gpu id: '{}'".format(opt.gpus))
         os.environ["CUDA_VISIBLE_DEVICES"] = opt.gpus
         if not torch.cuda.is_available():
-                raise Exception("No GPU found or Wrong gpu id, please run without --cuda")
+            raise Exception("No GPU found or Wrong gpu id, please run without --cuda")
 
-    opt.seed = random.randint(1, 10000)
+    opt.seed = 903
     print("Random Seed: ", opt.seed)
     torch.manual_seed(opt.seed)
     if cuda:
@@ -70,8 +69,7 @@ def main():
 
     print("===> Building model")
     model = Net()
-    # criterion = nn.MSELoss(size_average=False)
-    criterion = nn.MSELoss(size_average=True)
+    criterion = nn.MSELoss()
 
     print("===> Setting GPU")
     if cuda:
@@ -98,8 +96,8 @@ def main():
             print("=> no model found at '{}'".format(opt.pretrained))  
 
     print("===> Setting Optimizer")
-    # optimizer = optim.SGD(model.parameters(), lr=opt.lr, momentum=opt.momentum, weight_decay=opt.weight_decay)
-    optimizer = optim.Adam(model.parameters(), lr=config.TRAIN.learning_rate)
+    optimizer = optim.SGD(model.parameters(), lr=config.TRAIN.learning_rate, momentum=opt.momentum, weight_decay=opt.weight_decay)
+    # optimizer = optim.Adam(model.parameters(), lr=config.TRAIN.learning_rate)
 
     print("===> Training")
     writer = SummaryWriter(config.SAVE.summary_dir)
@@ -107,52 +105,38 @@ def main():
         train(training_data_loader, optimizer, model, criterion, epoch, writer)
         save_checkpoint(model, epoch)
 
-def adjust_learning_rate(optimizer, epoch):
-    """Sets the learning rate to the initial LR decayed by 10 every 10 epochs"""
-    lr = opt.lr * (0.1 ** (epoch // opt.step))
-    return lr
-
 def train(training_data_loader, optimizer, model, criterion, epoch, writer):
     global step
-    lr = adjust_learning_rate(optimizer, epoch-1)
-
-    for param_group in optimizer.param_groups:
-        param_group["lr"] = lr
-
-    # print("Epoch = {}, lr = {}".format(epoch, optimizer.param_groups[0]["lr"]))
-
     model.train()
-
     for iteration, batch in enumerate(tqdm(training_data_loader, position=1, dynamic_ncols=True), 1):
+        # Get the image
         train_img, label_img = Variable(batch[0]), Variable(batch[1], requires_grad=False)
-
         if opt.cuda:
             train_img = train_img.cuda()
             label_img = label_img.cuda()
-
+        # Forward
         output = model(train_img)
-        output = torch.clamp(output, 0, 1)
         loss = criterion(output, label_img)
+        # Back-propagation
         optimizer.zero_grad()
         loss.backward() 
-        # nn.utils.clip_grad_norm(model.parameters(),opt.clip) 
+        nn.utils.clip_grad_norm_(model.parameters(), opt.clip) 
         optimizer.step()
-
         # print("===> Epoch[{}]({}/{}): Loss: {:.10f}".format(epoch, iteration, len(training_data_loader), loss.item()))
         if ((iteration - 1) % 100 == 0):
             writer.add_scalar('MSE', loss.item(), global_step=step)
-            writer.add_scalar('learning_rate', lr, global_step=step)
             writer.add_images('output', output * 255.0, global_step=step)
+            writer.add_images('output_model', model.output_model * 255.0, global_step=step)
             writer.add_images('label_img', label_img * 255.0, global_step=step)
             writer.add_images('train_img', train_img * 255.0, global_step=step)
-            save_image(output * 255.0, f"{config.SAVE.save_dir}/train_{step}.png")
+            writer.flush()
+            save_image(output, f"{config.SAVE.save_dir}/train_{step}.png")
         step += 1
 
 def save_checkpoint(model, epoch):
     model_out_path = f"{config.SAVE.checkpoint_dir}/model_epoch_{epoch}.pth"
     state = {"epoch": epoch ,"model": model}
     torch.save(state, model_out_path)
-    # print("Checkpoint saved to {}".format(model_out_path))
 
 if __name__ == "__main__":
     main()
