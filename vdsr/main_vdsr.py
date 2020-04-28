@@ -56,23 +56,22 @@ def main():
     sr_size = config.DATA.sr_size
     train_set = DatasetFromDIV2K(train_dirpath=config.DATA.train_lr_path, label_dirpath=config.DATA.train_hr_path,
                                  train_transform=transforms.Compose([
-                                     transforms.RandomCrop([sr_size / 4, sr_size / 4]),
+                                     transforms.Resize([int(sr_size / 4), int(sr_size / 4)]),
                                      transforms.Resize([sr_size, sr_size]),
-                                     transforms.RandomHorizontalFlip(),
-                                     transforms.ToTensor(),
-                                     transforms.Normalize((127.5, 127.5, 127.5), (127.5, 127.5, 127.5))
                                  ]),
                                  label_transform=transforms.Compose([
                                      transforms.RandomCrop([sr_size, sr_size]),
                                      transforms.RandomHorizontalFlip(),
-                                     transforms.ToTensor(),
-                                     transforms.Normalize((127.5, 127.5, 127.5), (127.5, 127.5, 127.5))
+                                 ]),
+                                 all_transform=transforms.Compose([
+                                     transforms.ToTensor()
                                  ]))
     training_data_loader = DataLoader(dataset=train_set, num_workers=opt.threads, batch_size=config.TRAIN.batch_size, shuffle=True)
 
     print("===> Building model")
     model = Net()
-    criterion = nn.MSELoss(size_average=False)
+    # criterion = nn.MSELoss(size_average=False)
+    criterion = nn.MSELoss(size_average=True)
 
     print("===> Setting GPU")
     if cuda:
@@ -99,7 +98,8 @@ def main():
             print("=> no model found at '{}'".format(opt.pretrained))  
 
     print("===> Setting Optimizer")
-    optimizer = optim.SGD(model.parameters(), lr=opt.lr, momentum=opt.momentum, weight_decay=opt.weight_decay)
+    # optimizer = optim.SGD(model.parameters(), lr=opt.lr, momentum=opt.momentum, weight_decay=opt.weight_decay)
+    optimizer = optim.Adam(model.parameters(), lr=config.TRAIN.learning_rate)
 
     print("===> Training")
     writer = SummaryWriter(config.SAVE.summary_dir)
@@ -131,20 +131,21 @@ def train(training_data_loader, optimizer, model, criterion, epoch, writer):
             label_img = label_img.cuda()
 
         output = model(train_img)
+        output = torch.clamp(output, 0, 1)
         loss = criterion(output, label_img)
         optimizer.zero_grad()
         loss.backward() 
-        nn.utils.clip_grad_norm(model.parameters(),opt.clip) 
+        # nn.utils.clip_grad_norm(model.parameters(),opt.clip) 
         optimizer.step()
 
+        # print("===> Epoch[{}]({}/{}): Loss: {:.10f}".format(epoch, iteration, len(training_data_loader), loss.item()))
         if ((iteration - 1) % 100 == 0):
-            # print("===> Epoch[{}]({}/{}): Loss: {:.10f}".format(epoch, iteration, len(training_data_loader), loss.data[0]))
-            writer.add_scalar('MSE', loss, global_step=step)
+            writer.add_scalar('MSE', loss.item(), global_step=step)
             writer.add_scalar('learning_rate', lr, global_step=step)
-            writer.add_images('output', output * 127.5 + 127.5, global_step=step)
-            writer.add_images('label_img', label_img * 127.5 + 127.5, global_step=step)
-            writer.add_images('train_img', train_img * 127.5 + 127.5, global_step=step)
-            save_image(output * 127.5 + 127.5, f"{config.SAVE.save_dir}/train_{step}.png")
+            writer.add_images('output', output * 255.0, global_step=step)
+            writer.add_images('label_img', label_img * 255.0, global_step=step)
+            writer.add_images('train_img', train_img * 255.0, global_step=step)
+            save_image(output * 255.0, f"{config.SAVE.save_dir}/train_{step}.png")
         step += 1
 
 def save_checkpoint(model, epoch):

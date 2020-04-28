@@ -60,7 +60,7 @@ if cuda:
         raise Exception("No GPU found or Wrong gpu id, please run without --cuda")
 
 scale = 4
-version = 'v5'
+version = 'v1'
 image_list = list(Path(opt.dataset).glob('*.bmp'))
 writer = SummaryWriter(f'../../REWIND-vdsr/summary/{version}/')
 
