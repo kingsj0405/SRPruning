@@ -24,13 +24,11 @@ class DatasetFromHdf5(data.Dataset):
 class DatasetFromDIV2K(data.Dataset):
     def __init__(self, train_dirpath, label_dirpath, train_transform=None, label_transform=None, all_transform=None):
         super(DatasetFromDIV2K, self).__init__()
-        self.train_list = sorted(list(Path(train_dirpath).glob('*.png')))
         self.label_list = sorted(list(Path(label_dirpath).glob('*.png')))
         self.train_transform = train_transform
         self.label_transform = label_transform
         self.all_transform = all_transform
-        self.len = len(self.train_list)
-        assert(self.len == len(self.label_list))
+        self.len = len(self.label_list)
     
     def __getitem__(self, index):
         label_img = Image.open(self.label_list[index])

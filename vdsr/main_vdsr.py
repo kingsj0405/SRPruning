@@ -20,7 +20,7 @@ from dataset import DatasetFromHdf5, DatasetFromDIV2K
 from config import config, start_experiment
 
 
-def train(training_data_loader, optimizer, model, criterion, epoch, writer):
+def train(training_data_loader, epoch, writer):
     def psnr(img1, img2, max=255):
         """Peak Signal to Noise Ratio
         img1 and img2 have range [0, 255]"""
@@ -30,7 +30,7 @@ def train(training_data_loader, optimizer, model, criterion, epoch, writer):
         mse = torch.mean((img1 - img2) ** 2)
         return 20 * torch.log10(255.0 / torch.sqrt(mse))
     # train
-    global step
+    global step, model, optimizer, criterion
     model.train()
     for iteration, batch in enumerate(tqdm(training_data_loader, position=1, dynamic_ncols=True), 1):
         # Get the image
@@ -50,16 +50,15 @@ def train(training_data_loader, optimizer, model, criterion, epoch, writer):
             writer.add_scalar('PSNR', psnr(output, label_img, 1), global_step=step)
             writer.add_scalar('PSNR bicubic', psnr(train_img, label_img, 1), global_step=step)
             writer.add_images('output', output, global_step=step)
-            writer.add_images('output_model', model.output_model, global_step=step)
+            writer.add_images('model.output_model', model.output_model, global_step=step)
             writer.add_images('label_img', label_img, global_step=step)
             writer.add_images('train_img', train_img, global_step=step)
             writer.flush()
             save_image(output, f"{config.SAVE.save_dir}/train_{step}.png")
             psnr_set5(model, config.DATA.set5_dir, config.SAVE.save_dir, writer)
-        step += 1
+        step += config.TRAIN.batch_size
 
 def psnr_set5(model, set5_dir, save_dir, writer):
-    # psnr
     def psnr(y_true,y_pred, shave_border=4):
         '''
             Input must be 0-255, 2D
@@ -84,6 +83,7 @@ def psnr_set5(model, set5_dir, save_dir, writer):
             t[:, 2] += O[2]
             ycbcr = np.reshape(t, [img.shape[0], img.shape[1], img.shape[2]])
             return ycbcr
+        # psnr
         y_true = _rgb2ycbcr(y_true)[:,:,0]
         y_pred = _rgb2ycbcr(y_pred)[:,:,0]
         target_data = np.array(y_true, dtype=np.float32)
@@ -150,13 +150,11 @@ def save_checkpoint(model, epoch, step):
 
 
 def main():
-    global step
-
+    global step, model, optimizer, criterion
     print("Random Seed: ", config.TRAIN.seed)
     np.random.seed(config.TRAIN.seed)
     torch.manual_seed(config.TRAIN.seed)
     torch.cuda.manual_seed(config.TRAIN.seed)
-
     print("===> Loading datasets")
     sr_size = config.DATA.sr_size
     train_set = DatasetFromDIV2K(train_dirpath=config.DATA.train_lr_path,
@@ -175,14 +173,13 @@ def main():
                                       num_workers=4,
                                       batch_size=config.TRAIN.batch_size,
                                       shuffle=True)
-
     print("===> Building model")
     model = Net().cuda()
     criterion = nn.MSELoss().cuda()
-
     print("===> Setting Optimizer")
     optimizer = optim.Adam(model.parameters(), lr=config.TRAIN.learning_rate)
-
+    # optimizer = optim.SGD(model.parameters(), lr=config.TRAIN.learning_rate, momentum=0.9, weight_decay=1e-4)
+    # scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=20, gamma=0.1)  # step_size is epoch_size explicit by scheduler.step()
     print("===> Prepare experiment")
     if config.TRAIN.start_epoch == 0:
         start_epoch = 0
@@ -193,12 +190,12 @@ def main():
         start_epoch = checkpoint["epoch"] + 1
         step = checkpoint["step"]
         model.load_state_dict(checkpoint["model"].state_dict())
-
     print("===> Training")
     writer = SummaryWriter(config.SAVE.summary_dir)
     for epoch in tqdm(range(start_epoch + 1, config.TRAIN.end_epoch + 1), position=0, dynamic_ncols=True):
-        train(training_data_loader, optimizer, model, criterion, epoch, writer)
+        train(training_data_loader, epoch, writer)
         save_checkpoint(model, epoch, step)
+        # scheduler.step()
 
 
 if __name__ == "__main__":

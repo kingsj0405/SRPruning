@@ -5,7 +5,7 @@ from math import sqrt
 class Conv_ReLU_Block(nn.Module):
     def __init__(self):
         super(Conv_ReLU_Block, self).__init__()
-        self.conv = nn.Conv2d(in_channels=64, out_channels=64, kernel_size=3, stride=1, padding=1, bias=True)
+        self.conv = nn.Conv2d(in_channels=100, out_channels=100, kernel_size=3, stride=1, padding=1, bias=True)
         self.relu = nn.ReLU()
         
     def forward(self, x):
@@ -14,10 +14,10 @@ class Conv_ReLU_Block(nn.Module):
 class Net(nn.Module):
     def __init__(self):
         super(Net, self).__init__()
-        self.input = nn.Conv2d(in_channels=3, out_channels=64, kernel_size=3, stride=1, padding=1, bias=True)
+        self.input = nn.Conv2d(in_channels=3, out_channels=100, kernel_size=3, stride=1, padding=1, bias=True)
+        self.output = nn.Conv2d(in_channels=100, out_channels=3, kernel_size=3, stride=1, padding=1, bias=True)
         self.relu = nn.ReLU()
         self.residual_layer = self.make_layer(Conv_ReLU_Block, 18)
-        self.output = nn.Conv2d(in_channels=64, out_channels=3, kernel_size=3, stride=1, padding=1, bias=True)
         for m in self.modules():
             if isinstance(m, nn.Conv2d):
                 nn.init.kaiming_normal_(m.weight)
