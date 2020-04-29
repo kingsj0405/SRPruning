@@ -33,7 +33,6 @@ class DatasetFromDIV2K(data.Dataset):
         assert(self.len == len(self.label_list))
     
     def __getitem__(self, index):
-        # Transform test
         label_img = Image.open(self.label_list[index])
         if self.label_transform is not None:
             label_img = self.label_transform(label_img)

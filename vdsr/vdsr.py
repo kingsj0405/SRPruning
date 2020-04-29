@@ -14,10 +14,10 @@ class Conv_ReLU_Block(nn.Module):
 class Net(nn.Module):
     def __init__(self):
         super(Net, self).__init__()
-        self.residual_layer = self.make_layer(Conv_ReLU_Block, 18)
         self.input = nn.Conv2d(in_channels=3, out_channels=64, kernel_size=3, stride=1, padding=1)
-        self.output = nn.Conv2d(in_channels=64, out_channels=3, kernel_size=3, stride=1, padding=1)
         self.relu = nn.ReLU()
+        self.residual_layer = self.make_layer(Conv_ReLU_Block, 18)
+        self.output = nn.Conv2d(in_channels=64, out_channels=3, kernel_size=3, stride=1, padding=1)
         for m in self.modules():
             if isinstance(m, nn.Conv2d):
                 n = m.kernel_size[0] * m.kernel_size[1] * m.out_channels
@@ -34,7 +34,7 @@ class Net(nn.Module):
         out = self.relu(self.input(x))
         out = self.residual_layer(out)
         out = self.output(out)
-        self.output_model = out  # Save for debug
+        self.output_model = out.detach()
         out = torch.add(out,residual)
         return out
  

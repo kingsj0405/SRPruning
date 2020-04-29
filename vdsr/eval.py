@@ -60,7 +60,7 @@ if cuda:
         raise Exception("No GPU found or Wrong gpu id, please run without --cuda")
 
 scale = 4
-version = 'v1'
+version = 'v23'
 image_list = list(Path(opt.dataset).glob('*.bmp'))
 writer = SummaryWriter(f'../../REWIND-vdsr/summary/{version}/')
 
@@ -110,7 +110,8 @@ for epoch in range(1, 51):
         psnr_predicted = PSNR(label_img, predicted_img, scale)
         avg_psnr_predicted += psnr_predicted
         if epoch == 50:
-            Image.fromarray(predicted_img).save(f"../../REWIND-vdsr/test/v5/{image_path.stem}.png")
+            Path(f"../../REWIND-vdsr/test/{version}").mkdir(parents=True, exist_ok=True)
+            Image.fromarray(predicted_img).save(f"../../REWIND-vdsr/test/{version}/{image_path.stem}.png")
 
     writer.add_scalar('Set5 PSNR VDSR', avg_psnr_predicted/count, global_step=epoch*8)
     writer.add_scalar('Set5 PSNR bicubic', avg_psnr_bicubic/count, global_step=epoch*8)
