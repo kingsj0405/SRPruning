@@ -10,7 +10,8 @@ from tqdm import tqdm
 from config import Config
 from dataset import SRDatasetFromDIV2K
 from model import VDSR
-from util import DownSample2DMatlab, UpSample2DMatlab
+from layer import DownSample2DMatlab, UpSample2DMatlab
+from util import psnr_set5
 
 
 class Main:
@@ -29,8 +30,13 @@ class Main:
         torch.manual_seed(config.TRAIN.seed)
         torch.cuda.manual_seed(config.TRAIN.seed)
         print("[INFO] Get training dataset and data_loader")
-        train_set = SRDatasetFromDIV2K(dir_path=config.DATA.div2k_dir, transform=transforms.Compose(
-            [transforms.RandomCrop([config.DATA.hr_size, config.DATA.hr_size]), transforms.ToTensor()]))
+        train_set = SRDatasetFromDIV2K(dir_path=config.DATA.div2k_dir,
+                                       transform=transforms.Compose([
+                                           transforms.RandomCrop(
+                                               [config.DATA.hr_size, config.DATA.hr_size]),
+                                           transforms.RandomHorizontalFlip(),
+                                           transforms.RandomVerticalFlip(),
+                                           transforms.ToTensor()]))
         train_dataloader = torch.utils.data.DataLoader(
             dataset=train_set,
             num_workers=4,
@@ -47,12 +53,8 @@ class Main:
         global_step = 0
         log_timing = (len(train_set) // config.TRAIN.batch_size) / \
             config.TRAIN.log_per_epoch
-        for epoch in tqdm(
-            range(
-                config.TRAIN.start_epoch +
-                1,
-                config.TRAIN.end_epoch +
-                1)):
+        for epoch in tqdm(range(config.TRAIN.start_epoch + 1,
+                                config.TRAIN.end_epoch + 1)):
             for index, hr_image in enumerate(tqdm(train_dataloader)):
                 # Make low resolution input from high resolution image
                 hr_image = hr_image.cuda()
@@ -65,19 +67,32 @@ class Main:
                 optimizer.zero_grad()
                 loss.backward()
                 optimizer.step()
-                # Save images
-                if index % log_timing:
+                # Check training status
+                if index % log_timing == 0:
+                    # Calculate evalulation values like psnr
+                    psnr_set5(net,
+                              set5_dir=config.DATA.set5_dir,
+                              save_dir=config.SAVE.save_dir,
+                              writer=writer,
+                              epoch=epoch,
+                              global_step=global_step)
                     # Summary to tensorboard
                     writer.add_scalar(
                         'MSE', loss.item(), global_step=global_step)
+                    writer.add_images('lr', lr_image)
+                    writer.add_images('out', out)
+                    writer.add_images('model_output', net.model_output)
+                    writer.add_images('hr', hr_image)
                     writer.flush()
                     # Save sample images
-                    save_image(
-                        lr_image, f"{config.SAVE.save_dir}/lr_epoch_{epoch}.png")
-                    save_image(
-                        out, f"{config.SAVE.save_dir}/out_epoch_{epoch}.png")
-                    save_image(
-                        hr_image, f"{config.SAVE.save_dir}/hr_epoch_{epoch}.png")
+                    save_image(lr_image,
+                               f"{config.SAVE.save_dir}/epoch_{epoch}_lr.png")
+                    save_image(out,
+                               f"{config.SAVE.save_dir}/epoch_{epoch}_out.png")
+                    save_image(net.model_output,
+                               f"{config.SAVE.save_dir}/epoch_{epoch}_model_output.png")
+                    save_image(hr_image,
+                               f"{config.SAVE.save_dir}/epoch_{epoch}_hr.png")
                 # Add count
                 global_step += config.TRAIN.batch_size
 

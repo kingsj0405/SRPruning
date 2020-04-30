@@ -29,7 +29,7 @@ class Config:
         self.cfg.TRAIN = EasyDict()
         self.cfg.TRAIN.seed = 903
         # dataloader setting
-        self.cfg.TRAIN.batch_size = 16
+        self.cfg.TRAIN.batch_size = 64
         self.cfg.TRAIN.dataloader_num_worker = 4
         # training setting
         self.cfg.TRAIN.end_epoch = 100
