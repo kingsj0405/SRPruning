@@ -21,13 +21,10 @@ class Config:
         self.cfg.SAVE.summary_dir = f"{self.cfg.EXP.path}/summary/{self.cfg.EXP.version}"
 
         self.cfg.DATA = EasyDict()
-        self.cfg.DATA.train_hr_path = '../../dataset/DIV2K/DIV2K_train_HR'
-        self.cfg.DATA.train_lr_path = '../../dataset/DIV2K/DIV2K_train_LR_bicubic/X4'
-        self.cfg.DATA.valid_hr_path = '../../dataset/DIV2K/DIV2K_valid_HR'
-        self.cfg.DATA.valid_lr_path = '../../dataset/DIV2K/DIV2K_valid_LR_bicubic/X4'
+        self.cfg.DATA.div2k_dir = '../../dataset/DIV2K/'
         self.cfg.DATA.set5_dir = '../../dataset/Set5'
-        self.cfg.DATA.lr_size = 32
         self.cfg.DATA.hr_size = 128
+        self.cfg.DATA.lr_size = 32
 
         self.cfg.TRAIN = EasyDict()
         self.cfg.TRAIN.seed = 903
