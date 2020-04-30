@@ -30,16 +30,15 @@ class Config:
         self.cfg.TRAIN.seed = 903
         # dataloader setting
         self.cfg.TRAIN.batch_size = 16
-        self.cfg.TRAIN.log_period = 25
         self.cfg.TRAIN.dataloader_num_worker = 4
-        # epoch setting
-        self.cfg.TRAIN.start_epoch = 0
+        # training setting
         self.cfg.TRAIN.end_epoch = 100
-        # optimizer
+        self.cfg.TRAIN.log_per_epoch = 4
         self.cfg.TRAIN.learning_rate = 1e-4
-        # resume
+        # resume setting
         self.cfg.TRAIN.resume = False
         self.cfg.TRAIN.load_checkpoint_path = None
+        self.cfg.TRAIN.start_epoch = 0
 
     def prepare_experiment(self):
         if Path(self.cfg.SAVE.cfg_file_path).exists():
