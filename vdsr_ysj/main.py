@@ -7,6 +7,7 @@ from torchvision.utils import save_image
 
 from config import Config
 from dataset import SRDatasetFromDIV2K
+from util import DownSample2DMatlab, UpSample2DMatlab
 
 
 class Main:
@@ -33,9 +34,15 @@ class Main:
             batch_size=config.TRAIN.batch_size,
             shuffle=True)
         # FIXME: make as real train loop
-        for index, batch in enumerate(train_dataloader):
-            print(f"[{index}] {batch.shape}")
-            save_image(batch, f"{config.SAVE.save_dir}/sample_{index}.png")
+        for index, hr_image in enumerate(train_dataloader):
+            # Make low resolution input from high resolution image
+            lr_image = DownSample2DMatlab(hr_image, 1/4, cuda=False)
+            # Suuuper resolution
+            out = UpSample2DMatlab(lr_image, 4, cuda=False)
+            # Save images
+            save_image(lr_image, f"{config.SAVE.save_dir}/lr_sample_{index}.png")
+            save_image(out, f"{config.SAVE.save_dir}/out_sample_{index}.png")
+            save_image(hr_image, f"{config.SAVE.save_dir}/hr_sample_{index}.png")
 
 
 if __name__ == '__main__':
