@@ -9,9 +9,9 @@ class Config:
         self.cfg = EasyDict()
         self.cfg.EXP = EasyDict()
         self.cfg.EXP.path = '../../REWIND-vdsr-scratch'
-        self.cfg.EXP.version = 'v5'
+        self.cfg.EXP.version = 'v6'
         self.cfg.EXP.subversion = '0'  # Inc this val for training from checkpoint
-        self.cfg.EXP.description = "lr from 1e-4, more long, long step learning rate"
+        self.cfg.EXP.description = "lr from 1e-4, same batch size with v1, long step size"
 
         self.cfg.SAVE = EasyDict()
         self.cfg.SAVE.cfg_dir = f"{self.cfg.EXP.path}/config/"
@@ -28,11 +28,11 @@ class Config:
 
         self.cfg.TRAIN = EasyDict()
         self.cfg.TRAIN.seed = 903
-        self.cfg.TRAIN.batch_size = 32
+        self.cfg.TRAIN.batch_size = 64
         self.cfg.TRAIN.dataloader_num_worker = 4
         self.cfg.TRAIN.end_epoch = 1000
         self.cfg.TRAIN.log_per_epoch = 2
-        self.cfg.TRAIN.learning_rate = 1e-4
+        self.cfg.TRAIN.learning_rate = 5e-5
         self.cfg.TRAIN.lr_step_size = 100
         self.cfg.TRAIN.lr_step_gamma = 0.1
         # resume setting
