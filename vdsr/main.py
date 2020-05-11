@@ -36,7 +36,14 @@ class Main:
                                                [config.DATA.hr_size, config.DATA.hr_size]),
                                            transforms.RandomHorizontalFlip(),
                                            transforms.RandomVerticalFlip(),
-                                           transforms.ToTensor()]))
+                                           transforms.ToTensor()]),
+                                       transform_lr=transforms.Compose([
+                                           transforms.RandomCrop(
+                                               [config.DATA.lr_size, config.DATA.lr_size]),
+                                           transforms.RandomHorizontalFlip(),
+                                           transforms.RandomVerticalFlip(),
+                                           transforms.ToTensor()
+                                       ]))
         train_dataloader = torch.utils.data.DataLoader(
             dataset=train_set,
             num_workers=4,
@@ -47,6 +54,7 @@ class Main:
         net.train()
         optimizer = torch.optim.Adam(
             net.parameters(), lr=config.TRAIN.learning_rate)
+        scheduler = torch.optim.lr_scheduler.StepLR(optimizer, config.TRAIN.lr_step_size)
         criterion = torch.nn.MSELoss().cuda()
         print("[INFO] Start training loop")
         writer = SummaryWriter(config.SAVE.summary_dir)
@@ -55,10 +63,11 @@ class Main:
             config.TRAIN.log_per_epoch
         for epoch in tqdm(range(config.TRAIN.start_epoch + 1,
                                 config.TRAIN.end_epoch + 1)):
-            for index, hr_image in enumerate(tqdm(train_dataloader)):
+            for index, (hr_image, lr_image) in enumerate(
+                    tqdm(train_dataloader)):
                 # Make low resolution input from high resolution image
                 hr_image = hr_image.cuda()
-                lr_image = DownSample2DMatlab(hr_image, 1 / 4, cuda=True)
+                lr_image = lr_image.cuda()
                 # Forward
                 bicubic_image = UpSample2DMatlab(lr_image, 4, cuda=True)
                 out, model_output = net(bicubic_image)
@@ -85,6 +94,9 @@ class Main:
                         '2 Set5 PSNR VDSR', app, global_step=global_step)
                     writer.add_scalar(
                         '3 Set5 PSNR bicubic', apb, global_step=global_step)
+                    writer.add_scalar(
+                        '4 learning rate', optimizer.param_groups[0]['lr'],
+                        global_step=global_step)
                     writer.flush()
                     # Save sample images
                     save_image(lr_image,
@@ -105,6 +117,7 @@ class Main:
                     }, f"{config.SAVE.checkpoint_dir}/SRPruning_epoch_{epoch}.pth")
                 # Add count
                 global_step += config.TRAIN.batch_size
+            scheduler.step()
 
 
 if __name__ == '__main__':

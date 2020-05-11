@@ -115,15 +115,15 @@ def psnr_set5(model, set5_dir, save_dir):
         predicted_img = predicted_img.clip(0, 1)
         predicted_img = (predicted_img * 255).astype(np.uint8)
         # Get psnr of bicubic, predicted
-        psnr_bicubic = psnr(_rgb2ycbcr(label_img)[:,:,0],
-                            _rgb2ycbcr(bicubic_img)[:,:,0],
+        psnr_bicubic = psnr(_rgb2ycbcr(label_img)[:, :, 0],
+                            _rgb2ycbcr(bicubic_img)[:, :, 0],
                             scale)
-        psnr_predicted = psnr(_rgb2ycbcr(label_img)[:,:,0],
-                              _rgb2ycbcr(predicted_img)[:,:,0],
+        psnr_predicted = psnr(_rgb2ycbcr(label_img)[:, :, 0],
+                              _rgb2ycbcr(predicted_img)[:, :, 0],
                               scale)
         avg_psnr_bicubic += psnr_bicubic
         avg_psnr_predicted += psnr_predicted
         # Save image
         Image.fromarray(predicted_img).save(
-            f"{save_dir}/{image_path.stem}.png")
+            f"{save_dir}/Set5_{image_path.stem}.png")
     return (avg_psnr_predicted / count), (avg_psnr_bicubic / count)
