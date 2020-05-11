@@ -100,7 +100,7 @@ def psnr_set5(model, set5_dir, save_dir):
         bicubic_img = UpSample2DMatlab(bicubic_img, scale)
         bicubic_img = bicubic_img.clamp(0, 1)
         bicubic_img = torch.round(bicubic_img * 255) / 255
-        predicted_img, _ = model(bicubic_img)
+        predicted_img = model(bicubic_img)
         label_img = label_img.permute(0, 2, 3, 1)
         bicubic_img = bicubic_img.permute(0, 2, 3, 1)
         predicted_img = predicted_img.permute(0, 2, 3, 1)

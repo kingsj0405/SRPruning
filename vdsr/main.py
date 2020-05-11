@@ -70,7 +70,7 @@ class Main:
                 lr_image = lr_image.cuda()
                 # Forward
                 bicubic_image = UpSample2DMatlab(lr_image, 4, cuda=True)
-                out, model_output = net(bicubic_image)
+                out = net(bicubic_image)
                 loss = criterion(out, hr_image)
                 # Back-propagation
                 optimizer.zero_grad()
@@ -82,7 +82,7 @@ class Main:
                     writer.add_images('1 hr', hr_image.clamp(0, 1))
                     writer.add_images('2 out', out.clamp(0, 1))
                     writer.add_images('3 bicubic', bicubic_image.clamp(0, 1))
-                    writer.add_images('4 model_output', model_output)
+                    # writer.add_images('4 model_output', model_output)# Memory
                     writer.add_images('5 lr', lr_image.clamp(0, 1))
                     # Add values to tensorboard
                     writer.add_scalar(
@@ -103,8 +103,8 @@ class Main:
                                f"{config.SAVE.save_dir}/epoch_{epoch}_lr.png")
                     save_image(out,
                                f"{config.SAVE.save_dir}/epoch_{epoch}_out.png")
-                    save_image(model_output,
-                               f"{config.SAVE.save_dir}/epoch_{epoch}_model_output.png")
+                    # save_image(model_output,
+                    #            f"{config.SAVE.save_dir}/epoch_{epoch}_model_output.png")
                     save_image(hr_image,
                                f"{config.SAVE.save_dir}/epoch_{epoch}_hr.png")
                     # Save checkpoint
