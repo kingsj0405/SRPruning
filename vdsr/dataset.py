@@ -35,24 +35,24 @@ class SRDatasetFromDIV2K(data.Dataset):
         super(SRDatasetFromDIV2K, self).__init__()
         self.hr_list = sorted(
             list(Path(f"{dir_path}/DIV2K_train_HR").glob('*.png')))
-        self.lr_list = sorted(
-            list(Path(f"{dir_path}/DIV2K_train_LR_bicubic/X4").glob('*.png')))
-        assert(len(self.hr_list) == len(self.lr_list))
+        # self.lr_list = sorted(
+        #     list(Path(f"{dir_path}/DIV2K_train_LR_bicubic/X4").glob('*.png')))
+        # assert(len(self.hr_list) == len(self.lr_list))
         self.len = len(self.hr_list)
         self.transform = transform
         self.transform_lr = transform_lr
 
     def __getitem__(self, index):
         hr_img = Image.open(self.hr_list[index])
-        lr_img = Image.open(self.lr_list[index])
+        # lr_img = Image.open(self.lr_list[index])
         seed = np.random.randint(time.time())
         if self.transform is not None:
             random.seed(seed)
             hr_img = self.transform(hr_img)
-        if self.transform_lr is not None:
-            random.seed(seed)
-            lr_img = self.transform_lr(lr_img)
-        return hr_img, lr_img
+        # if self.transform_lr is not None:
+        #     random.seed(seed)
+        #     lr_img = self.transform_lr(lr_img)
+        return hr_img#, lr_img
 
     def __len__(self):
         return self.len

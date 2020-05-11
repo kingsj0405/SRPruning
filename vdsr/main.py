@@ -63,11 +63,11 @@ class Main:
             config.TRAIN.log_per_epoch
         for epoch in tqdm(range(config.TRAIN.start_epoch + 1,
                                 config.TRAIN.end_epoch + 1)):
-            for index, (hr_image, lr_image) in enumerate(
+            for index, hr_image in enumerate(
                     tqdm(train_dataloader)):
                 # Make low resolution input from high resolution image
                 hr_image = hr_image.cuda()
-                lr_image = lr_image.cuda()
+                lr_image = DownSample2DMatlab(hr_image, 1 / 4, cuda=True)
                 # Forward
                 bicubic_image = UpSample2DMatlab(lr_image, 4, cuda=True)
                 out = net(bicubic_image)

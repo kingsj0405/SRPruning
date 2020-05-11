@@ -9,9 +9,9 @@ class Config:
         self.cfg = EasyDict()
         self.cfg.EXP = EasyDict()
         self.cfg.EXP.path = '../../REWIND-vdsr-scratch'
-        self.cfg.EXP.version = 'v7'
+        self.cfg.EXP.version = 'v8'
         self.cfg.EXP.subversion = '0'  # Inc this val for training from checkpoint
-        self.cfg.EXP.description = "lr from 1e-5, batch size 100"
+        self.cfg.EXP.description = "Revert data down and up on training"
 
         self.cfg.SAVE = EasyDict()
         self.cfg.SAVE.cfg_dir = f"{self.cfg.EXP.path}/config/"
