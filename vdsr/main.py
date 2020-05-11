@@ -60,8 +60,8 @@ class Main:
                 hr_image = hr_image.cuda()
                 lr_image = DownSample2DMatlab(hr_image, 1 / 4, cuda=True)
                 # Forward
-                out = UpSample2DMatlab(lr_image, 4, cuda=True)
-                out = net(out)
+                bicubic_image = UpSample2DMatlab(lr_image, 4, cuda=True)
+                out, model_output = net(bicubic_image)
                 loss = criterion(out, hr_image)
                 # Back-propagation
                 optimizer.zero_grad()
@@ -69,27 +69,29 @@ class Main:
                 optimizer.step()
                 # Check training status
                 if index % log_timing == 0:
-                    # Calculate evalulation values like psnr
-                    psnr_set5(net,
-                              set5_dir=config.DATA.set5_dir,
-                              save_dir=config.SAVE.save_dir,
-                              writer=writer,
-                              epoch=epoch,
-                              global_step=global_step)
-                    # Summary to tensorboard
+                    # Add images to tensorboard
+                    writer.add_images('1 hr', hr_image.clamp(0, 1))
+                    writer.add_images('2 out', out.clamp(0, 1))
+                    writer.add_images('3 bicubic', bicubic_image.clamp(0, 1))
+                    writer.add_images('4 model_output', model_output)
+                    writer.add_images('5 lr', lr_image.clamp(0, 1))
+                    # Add values to tensorboard
                     writer.add_scalar(
-                        'MSE', loss.item(), global_step=global_step)
-                    writer.add_images('lr', lr_image)
-                    writer.add_images('out', out)
-                    writer.add_images('model_output', net.model_output)
-                    writer.add_images('hr', hr_image)
+                        '1 MSE', loss.item(), global_step=global_step)
+                    app, apb = psnr_set5(net,
+                                         set5_dir=config.DATA.set5_dir,
+                                         save_dir=config.SAVE.save_dir)
+                    writer.add_scalar(
+                        '2 Set5 PSNR VDSR', app, global_step=global_step)
+                    writer.add_scalar(
+                        '3 Set5 PSNR bicubic', apb, global_step=global_step)
                     writer.flush()
                     # Save sample images
                     save_image(lr_image,
                                f"{config.SAVE.save_dir}/epoch_{epoch}_lr.png")
                     save_image(out,
                                f"{config.SAVE.save_dir}/epoch_{epoch}_out.png")
-                    save_image(net.model_output,
+                    save_image(model_output,
                                f"{config.SAVE.save_dir}/epoch_{epoch}_model_output.png")
                     save_image(hr_image,
                                f"{config.SAVE.save_dir}/epoch_{epoch}_hr.png")

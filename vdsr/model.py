@@ -56,6 +56,6 @@ class VDSR(nn.Module):
         for l in self.residual_layer:
             out = l(out)
         out = self.output(out)
-        self.model_output = out.detach()
+        model_output = out.detach()
         out = out + residual
-        return out
+        return out, model_output
