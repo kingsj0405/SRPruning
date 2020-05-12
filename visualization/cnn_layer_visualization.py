@@ -19,10 +19,11 @@ class CNNLayerVisualization():
         Produces an image that minimizes the loss of a convolution
         operation for a specific layer and filter
     """
-    def __init__(self, model, layer_index, filter_index, save_dir='../generated'):
+    def __init__(self, model, conv_index, layer_index, filter_index, save_dir='../generated'):
         self.model = model
         self.model.eval()
-        self.layer_index = layer_index
+        self.conv_index = conv_index # Semantic conv index
+        self.layer_index = layer_index # Real conv index
         self.filter_index = filter_index
         self.conv_output = 0
         self.save_dir = save_dir
@@ -46,6 +47,9 @@ class CNNLayerVisualization():
             # Assign create image to a variable to move forward in the model
             x = processed_image
             for index, layer in enumerate(self.model.modules()):
+                # ModuleList can't forwarded
+                if layer.__class__.__name__.lower().find('modulelist') != -1:
+                    continue
                 # Add hook
                 if index == self.layer_index:
                     layer.register_forward_hook(hook_function)
@@ -59,7 +63,7 @@ class CNNLayerVisualization():
             # Loss function is the mean of the output of the selected layer/filter
             # We try to minimize the mean of the output of that specific filter
             loss = -torch.mean(self.conv_output)
-            print(f'Iteration:{i}, Loss:{loss.data.numpy()}')
+            print(f'[INFO] Iteration:{i}, Loss:{loss.data.numpy()}')
             # Backward
             loss.backward()
             # Update image
@@ -68,5 +72,6 @@ class CNNLayerVisualization():
             self.created_image = recreate_image(processed_image)
             # Save image
             if i % 5 == 0:
-                name = f'Conv2d.{self.layer_index}.{self.filter_index}_iter{i}.png'
+                name = f'Conv2d.{self.conv_index}.{self.filter_index}_iter{i}.png'
                 save_image(self.created_image, f'{self.save_dir}/{name}')
+                print(f"[INFO] Visualization saved on {self.save_dir}/{name}")
