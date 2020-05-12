@@ -8,6 +8,10 @@ from visualization.cnn_layer_visualization import CNNLayerVisualization
 
 
 def _filter(net, save_dir, target_conv_index, filter_index):
+    """
+    summary:
+        it can be used in training
+    """
     if target_conv_index != 'all':
         raise NotImplementedError
     conv_index = 1
