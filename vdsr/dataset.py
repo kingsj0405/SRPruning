@@ -31,10 +31,18 @@ class SRDatasetFromDIV2K(data.Dataset):
     6 directories
     """
 
-    def __init__(self, dir_path="dataset/DIV2K", transform=None, transform_lr=None):
+    def __init__(self, dir_path="dataset/DIV2K", transform=None,
+                 transform_lr=None, mode='train'):
         super(SRDatasetFromDIV2K, self).__init__()
-        self.hr_list = sorted(
-            list(Path(f"{dir_path}/DIV2K_train_HR").glob('*.png')))
+        if mode == 'train':
+            self.hr_list = sorted(
+                list(Path(f"{dir_path}/DIV2K_train_HR").glob('*.png')))
+        elif mode == 'valid':
+            self.hr_list = sorted(
+                list(Path(f"{dir_path}/DIV2K_valid_HR").glob('*.png')))
+        else:
+            raise ValueException(
+                f"mode should be either 'train' or 'valid' but mode: {mode}")
         # self.lr_list = sorted(
         #     list(Path(f"{dir_path}/DIV2K_train_LR_bicubic/X4").glob('*.png')))
         # assert(len(self.hr_list) == len(self.lr_list))
@@ -52,7 +60,7 @@ class SRDatasetFromDIV2K(data.Dataset):
         # if self.transform_lr is not None:
         #     random.seed(seed)
         #     lr_img = self.transform_lr(lr_img)
-        return hr_img#, lr_img
+        return hr_img  # , lr_img
 
     def __len__(self):
         return self.len

@@ -30,8 +30,8 @@ class Config:
         self.cfg.TRAIN.batch_size = 64
         self.cfg.TRAIN.dataloader_num_worker = 4
         self.cfg.TRAIN.end_epoch = 3000
-        self.cfg.TRAIN.period_log = 2 # per epoch
-        self.cfg.TRAIN.period_save = 10 # 10 epoch
+        self.cfg.TRAIN.period_log = 2  # per epoch
+        self.cfg.TRAIN.period_save = 10  # 10 epoch
         self.cfg.TRAIN.learning_rate = 1e-5
         self.cfg.TRAIN.lr_step_size = 1000
         self.cfg.TRAIN.lr_step_gamma = 0.1

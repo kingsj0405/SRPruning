@@ -52,13 +52,16 @@ class Main:
         print("[INFO] Prepare net, optimizer, loss for training")
         net = VDSR().cuda()
         if torch.cuda.device_count() > 1:
-            print(f"[INFO] Use multiple gpus with count {torch.cuda.device_count()}")
+            print(
+                f"[INFO] Use multiple gpus with count {torch.cuda.device_count()}")
             net = torch.nn.DataParallel(net)
         optimizer = torch.optim.Adam(
             net.parameters(), lr=config.TRAIN.learning_rate)
-        scheduler = torch.optim.lr_scheduler.StepLR(optimizer, config.TRAIN.lr_step_size)
+        scheduler = torch.optim.lr_scheduler.StepLR(
+            optimizer, config.TRAIN.lr_step_size)
         if config.TRAIN.resume:
-            print(f"[INFO] Load checkpoint from {config.TRAIN.load_checkpoint_path}")
+            print(
+                f"[INFO] Load checkpoint from {config.TRAIN.load_checkpoint_path}")
             checkpoint = torch.load(config.TRAIN.load_checkpoint_path)
             net.load_state_dict(checkpoint['net'])
             optimizer.load_state_dict(checkpoint['optimizer'])
