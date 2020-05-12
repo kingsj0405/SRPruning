@@ -51,17 +51,26 @@ class Main:
             shuffle=True)
         print("[INFO] Prepare net, optimizer, loss for training")
         net = VDSR().cuda()
-        net.train()
         optimizer = torch.optim.Adam(
             net.parameters(), lr=config.TRAIN.learning_rate)
         scheduler = torch.optim.lr_scheduler.StepLR(optimizer, config.TRAIN.lr_step_size)
+        if config.TRAIN.resume:
+            print(f"[INFO] Load checkpoint from {config.TRAIN.load_checkpoint_path}")
+            checkpoint = torch.load(config.TRAIN.load_checkpoint_path)
+            net.load_state_dict(checkpoint['net'])
+            optimizer.load_state_dict(checkpoint['optimizer'])
+            start_epoch = checkpoint['epoch']
+            global_step = checkpoint['global_step']
+        else:
+            start_epoch = 0
+            global_step = 0
         criterion = torch.nn.MSELoss().cuda()
         print("[INFO] Start training loop")
+        net.train()
         writer = SummaryWriter(config.SAVE.summary_dir)
-        global_step = 0
         log_timing = (len(train_set) // config.TRAIN.batch_size) / \
             config.TRAIN.log_per_epoch
-        for epoch in tqdm(range(config.TRAIN.start_epoch + 1,
+        for epoch in tqdm(range(start_epoch + 1,
                                 config.TRAIN.end_epoch + 1)):
             for index, hr_image in enumerate(
                     tqdm(train_dataloader)):
@@ -113,7 +122,8 @@ class Main:
                         'epoch': epoch,
                         'global_step': global_step,
                         'net': net.state_dict(),
-                        'optimizer': optimizer.state_dict()
+                        'optimizer': optimizer.state_dict(),
+                        'scheduler': scheduler.state_dict(),
                     }, f"{config.SAVE.checkpoint_dir}/SRPruning_epoch_{epoch}.pth")
                 # Add count
                 global_step += config.TRAIN.batch_size
