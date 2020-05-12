@@ -9,8 +9,8 @@ class Config:
         self.cfg = EasyDict()
         self.cfg.EXP = EasyDict()
         self.cfg.EXP.path = '../../REWIND-vdsr-scratch'
-        self.cfg.EXP.version = 'v11'
-        self.cfg.EXP.description = "Load from v1, epoch 1000"
+        self.cfg.EXP.version = 'v12'
+        self.cfg.EXP.description = "Load from v11, epoch 1450"
 
         self.cfg.SAVE = EasyDict()
         self.cfg.SAVE.cfg_dir = f"{self.cfg.EXP.path}/config/"
@@ -36,7 +36,7 @@ class Config:
         self.cfg.TRAIN.lr_step_size = 1000
         self.cfg.TRAIN.lr_step_gamma = 0.1
         self.cfg.TRAIN.resume = True
-        self.cfg.TRAIN.load_checkpoint_path = f"{self.cfg.EXP.path}/checkpoint/v1/SRPruning_epoch_1000.pth"
+        self.cfg.TRAIN.load_checkpoint_path = f"{self.cfg.EXP.path}/checkpoint/v11/SRPruning_epoch_1450.pth"
 
     def prepare_experiment(self):
         if Path(self.cfg.SAVE.cfg_file_path).exists():
