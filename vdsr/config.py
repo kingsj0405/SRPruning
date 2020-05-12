@@ -9,13 +9,12 @@ class Config:
         self.cfg = EasyDict()
         self.cfg.EXP = EasyDict()
         self.cfg.EXP.path = '../../REWIND-vdsr-scratch'
-        self.cfg.EXP.version = 'v1'
-        self.cfg.EXP.subversion = '1'  # Inc this val for training from checkpoint
-        self.cfg.EXP.description = "Small batch size"
+        self.cfg.EXP.version = 'v11'
+        self.cfg.EXP.description = "Load from v1, epoch 1000"
 
         self.cfg.SAVE = EasyDict()
         self.cfg.SAVE.cfg_dir = f"{self.cfg.EXP.path}/config/"
-        self.cfg.SAVE.cfg_file_path = f"{self.cfg.EXP.path}/config/{self.cfg.EXP.version}.{self.cfg.EXP.subversion}.cfg"
+        self.cfg.SAVE.cfg_file_path = f"{self.cfg.EXP.path}/config/{self.cfg.EXP.version}.cfg"
         self.cfg.SAVE.save_dir = f"{self.cfg.EXP.path}/samples/{self.cfg.EXP.version}"
         self.cfg.SAVE.checkpoint_dir = f"{self.cfg.EXP.path}/checkpoint/{self.cfg.EXP.version}"
         self.cfg.SAVE.summary_dir = f"{self.cfg.EXP.path}/summary/{self.cfg.EXP.version}"
@@ -28,16 +27,16 @@ class Config:
 
         self.cfg.TRAIN = EasyDict()
         self.cfg.TRAIN.seed = 903
-        self.cfg.TRAIN.batch_size = 16
+        self.cfg.TRAIN.batch_size = 64
         self.cfg.TRAIN.dataloader_num_worker = 4
-        self.cfg.TRAIN.end_epoch = 2000
-        self.cfg.TRAIN.log_per_epoch = 2
+        self.cfg.TRAIN.end_epoch = 3000
+        self.cfg.TRAIN.period_log = 2 # per epoch
+        self.cfg.TRAIN.period_save = 10 # 10 epoch
         self.cfg.TRAIN.learning_rate = 1e-5
         self.cfg.TRAIN.lr_step_size = 1000
         self.cfg.TRAIN.lr_step_gamma = 0.1
-        # resume setting
         self.cfg.TRAIN.resume = True
-        self.cfg.TRAIN.load_checkpoint_path = f"{self.cfg.SAVE.checkpoint_dir}/SRPruning_epoch_1000.pth"
+        self.cfg.TRAIN.load_checkpoint_path = f"{self.cfg.EXP.path}/checkpoint/v1/SRPruning_epoch_1000.pth"
 
     def prepare_experiment(self):
         if Path(self.cfg.SAVE.cfg_file_path).exists():

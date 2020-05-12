@@ -51,6 +51,9 @@ class Main:
             shuffle=True)
         print("[INFO] Prepare net, optimizer, loss for training")
         net = VDSR().cuda()
+        if torch.cuda.device_count() > 1:
+            print(f"[INFO] Use multiple gpus with count {torch.cuda.device_count()}")
+            net = torch.nn.DataParallel(net)
         optimizer = torch.optim.Adam(
             net.parameters(), lr=config.TRAIN.learning_rate)
         scheduler = torch.optim.lr_scheduler.StepLR(optimizer, config.TRAIN.lr_step_size)
@@ -69,7 +72,7 @@ class Main:
         net.train()
         writer = SummaryWriter(config.SAVE.summary_dir)
         log_timing = (len(train_set) // config.TRAIN.batch_size) / \
-            config.TRAIN.log_per_epoch
+            config.TRAIN.period_log
         for epoch in tqdm(range(start_epoch + 1,
                                 config.TRAIN.end_epoch + 1)):
             for index, hr_image in enumerate(
@@ -107,6 +110,7 @@ class Main:
                         '4 learning rate', optimizer.param_groups[0]['lr'],
                         global_step=global_step)
                     writer.flush()
+                if epoch % config.TRAIN.period_save == 0:
                     # Save sample images
                     save_image(lr_image,
                                f"{config.SAVE.save_dir}/epoch_{epoch}_lr.png")
