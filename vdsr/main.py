@@ -15,7 +15,7 @@ from util import psnr_set5
 from visualization import _filter
 
 
-def train(self):
+def train():
     print("[INFO] Set configuration")
     config = Config()
     config.prepare_experiment()
