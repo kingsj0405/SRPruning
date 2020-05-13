@@ -9,8 +9,8 @@ class Config:
         self.cfg = EasyDict()
         self.cfg.EXP = EasyDict()
         self.cfg.EXP.path = '../../REWIND-vdsr-scratch'
-        self.cfg.EXP.version = 'v14'
-        self.cfg.EXP.description = "Start from scrach, v1+v11+v12+v13"
+        self.cfg.EXP.version = 'v15'
+        self.cfg.EXP.description = "More dense step learning rate"
 
         self.cfg.SAVE = EasyDict()
         self.cfg.SAVE.cfg_dir = f"{self.cfg.EXP.path}/config/"
@@ -29,12 +29,12 @@ class Config:
         self.cfg.TRAIN.seed = 903
         self.cfg.TRAIN.batch_size = 64
         self.cfg.TRAIN.dataloader_num_worker = 4
-        self.cfg.TRAIN.end_epoch = 6000
+        self.cfg.TRAIN.end_epoch = 2000
         self.cfg.TRAIN.period_log = 2  # per epoch
-        self.cfg.TRAIN.period_save = 500 # 10 epoch
+        self.cfg.TRAIN.period_save = 200 # 10 epoch
         self.cfg.TRAIN.learning_rate = 1e-4
-        self.cfg.TRAIN.lr_step_size = 2000
-        self.cfg.TRAIN.lr_step_gamma = 0.1
+        self.cfg.TRAIN.lr_step_size = 200
+        self.cfg.TRAIN.lr_step_gamma = 0.5
         self.cfg.TRAIN.resume = False
         self.cfg.TRAIN.load_checkpoint_path = f"{self.cfg.EXP.path}/checkpoint/v?/SRPruning_epoch_?.pth"
 
