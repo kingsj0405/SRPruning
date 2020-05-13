@@ -77,7 +77,7 @@ def psnr(y_true, y_pred, shave_border=4):
     return 20 * np.log10(255. / rmse)
 
 
-def psnr_set5(model, set5_dir, save_dir):
+def psnr_set5(model, set5_dir, save_dir, save=True):
     avg_psnr_predicted = 0.0
     avg_psnr_bicubic = 0.0
     count = 0.0
@@ -124,6 +124,7 @@ def psnr_set5(model, set5_dir, save_dir):
         avg_psnr_bicubic += psnr_bicubic
         avg_psnr_predicted += psnr_predicted
         # Save image
-        Image.fromarray(predicted_img).save(
-            f"{save_dir}/Set5_{image_path.stem}.png")
+        if save:
+            Image.fromarray(predicted_img).save(
+                f"{save_dir}/Set5_{image_path.stem}.png")
     return (avg_psnr_predicted / count), (avg_psnr_bicubic / count)

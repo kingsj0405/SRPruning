@@ -1,0 +1,1 @@
+from pruning.pruning import RandomPruning, MagnitudePruning

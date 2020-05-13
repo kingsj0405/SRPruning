@@ -1,7 +1,9 @@
 import fire
 import numpy
+import json
 import torch
 
+from easydict import EasyDict
 from torch.utils.tensorboard import SummaryWriter
 from torchvision import transforms
 from torchvision.utils import save_image
@@ -12,6 +14,7 @@ from dataset import SRDatasetFromDIV2K
 from model import VDSR
 from layer import DownSample2DMatlab, UpSample2DMatlab
 from util import psnr_set5
+from pruning import RandomPruning, MagnitudePruning
 from visualization import _filter
 
 
@@ -135,6 +138,47 @@ def train():
         scheduler.step()
 
 
+def random_pruning(checkpoint_path, save_dir, pruning_rate, try_cnt):
+    print("[INFO] Set random seed")
+    numpy.random.seed(903)
+    torch.manual_seed(903)
+    torch.cuda.manual_seed(903)
+    print(f"[INFO] Load from checkpoint {checkpoint_path}")
+    checkpoint = torch.load(checkpoint_path)
+    net = VDSR().cuda()
+    net.load_state_dict(checkpoint['net'])
+    print(f"[INFO] Get psnr5 from randomly pruned network")
+    data = []
+    psnrs = []
+    for i in tqdm(range(1, try_cnt + 1)):
+        # Prune
+        pruning = RandomPruning(net.parameters(), pruning_rate)
+        pruning.step()
+        pruning.zero()
+        # # Calculate psnr5
+        # psnr, _ = psnr_set5(net, set5_dir, save_dir, False)
+        # # Append to lists
+        # data.append({
+        #     'psnr': psnr,
+        #     'masks': pruning.masks
+        # })
+        # psnrs.append(psnr)
+    # print(f"[INFO] psnr statistics")
+    # psnrs = numpy.array(psnrs)
+    # statistics = {
+    #     'min': psnrs.min(),
+    #     'max': psnrs.max(),
+    #     'median': psnrs.median(),
+    #     'mean': psnrs.mean()
+    # }
+    # print(f"[INFO] Save masks and psnr value to {save_dir}/random-pruning.json")
+    # save_data = EasyDict()
+    # save_data.statistics = statistics
+    # save_data.data = data
+    # with open(f"{save_dir}/random-pruning.json", 'w') as f:
+    #     f.write(json.dumps(save_data, index=4))
+
+
 def test():
     raise NotImplementedError
 
@@ -161,5 +205,6 @@ if __name__ == '__main__':
     fire.Fire({
         'train': train,
         'test': test,
-        'filter': filter
+        'filter': filter,
+        'random_pruning': random_pruning
     })
