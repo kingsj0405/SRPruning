@@ -71,7 +71,8 @@ def train():
         optimizer.load_state_dict(checkpoint['optimizer'])
         scheduler.load_state_dict(checkpoint['scheduler'])
     elif config.TRAIN.rewinding:
-        print(f"[INFO] Load checkpoint from {config.TRAIN.load_rewinding_path}")
+        print(
+            f"[INFO] Load checkpoint from {config.TRAIN.load_rewinding_path}")
         checkpoint = torch.load(config.TRAIN.load_rewinding_path)
         start_epoch = checkpoint['epoch']
         global_step = checkpoint['global_step']
@@ -122,34 +123,33 @@ def train():
             bicubic_image = UpSample2DMatlab(lr_image, 4, cuda=True)
             out = net(bicubic_image)
             loss = criterion(out, hr_image)
-            # Check training status
-            if index % log_timing == 0:
-                # Add images to tensorboard
-                writer.add_images('1 hr', hr_image.clamp(0, 1))
-                writer.add_images('2 out', out.clamp(0, 1))
-                writer.add_images('3 bicubic', bicubic_image.clamp(0, 1))
-                # writer.add_images('4 model_output', model_output)# Memory
-                writer.add_images('5 lr', lr_image.clamp(0, 1))
-                # Add values to tensorboard
-                writer.add_scalar(
-                    '1 MSE', loss.item(), global_step=global_step)
-                app, apb = psnr_set5(net,
-                                     set5_dir=config.DATA.set5_dir,
-                                     save_dir=config.SAVE.save_dir)
-                writer.add_scalar(
-                    '2 Set5 PSNR VDSR', app, global_step=global_step)
-                writer.add_scalar(
-                    '3 Set5 PSNR bicubic', apb, global_step=global_step)
-                writer.add_scalar(
-                    '4 learning rate', optimizer.param_groups[0]['lr'],
-                    global_step=global_step)
-                writer.flush()
             # Back-propagation
             optimizer.zero_grad()
             loss.backward()
             optimizer.step()
             # Add count
             global_step += config.TRAIN.batch_size
+        if epoch % config.TRAIN.period_log == 0:
+            # Add images to tensorboard
+            writer.add_images('1 hr', hr_image.clamp(0, 1))
+            writer.add_images('2 out', out.clamp(0, 1))
+            writer.add_images('3 bicubic', bicubic_image.clamp(0, 1))
+            # writer.add_images('4 model_output', model_output)# Memory
+            writer.add_images('5 lr', lr_image.clamp(0, 1))
+            # Add values to tensorboard
+            writer.add_scalar(
+                '1 MSE', loss.item(), global_step=global_step)
+            app, apb = psnr_set5(net,
+                                 set5_dir=config.DATA.set5_dir,
+                                 save_dir=config.SAVE.save_dir)
+            writer.add_scalar(
+                '2 Set5 PSNR VDSR', app, global_step=global_step)
+            writer.add_scalar(
+                '3 Set5 PSNR bicubic', apb, global_step=global_step)
+            writer.add_scalar(
+                '4 learning rate', optimizer.param_groups[0]['lr'],
+                global_step=global_step)
+            writer.flush()
         if epoch % config.TRAIN.period_save == 0:
             # Save checkpoint
             torch.save({
@@ -178,7 +178,8 @@ def pruning():
     if not Path(dir_path).exists():
         Path(dir_path).mkdir(parents=True)
     json_path = f"{dir_path}/pruning-report.json"
-    print(f"[INFO] Load from checkpoint {config.PRUNE.trained_checkpoint_path}")
+    print(
+        f"[INFO] Load from checkpoint {config.PRUNE.trained_checkpoint_path}")
     checkpoint = torch.load(config.PRUNE.trained_checkpoint_path)
     print(f"[INFO] Get psnr set5 from randomly pruned network")
     result = EasyDict()
@@ -189,11 +190,14 @@ def pruning():
         net.load_state_dict(checkpoint['net'])
         # Prune
         if config.PRUNE.method == 'RandomPruning':
-            pruning = RandomPruning(net.parameters(), config.PRUNE.pruning_rate)
+            pruning = RandomPruning(
+                net.parameters(), config.PRUNE.pruning_rate)
         elif config.PRUNE.method == 'MagnitudePruning':
-            pruning = MagnitudePruning(net.parameters(), config.PRUNE.pruning_rate)
+            pruning = MagnitudePruning(
+                net.parameters(), config.PRUNE.pruning_rate)
         else:
-            raise Exception(f"Not proper config.PRUNE.method, cur var is: {config.PRUNE.method}")
+            raise Exception(
+                f"Not proper config.PRUNE.method, cur var is: {config.PRUNE.method}")
         pruning.update()
         pruning.zero()
         # Calculate psnr5

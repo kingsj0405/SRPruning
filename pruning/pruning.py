@@ -24,7 +24,7 @@ class Pruning:
     def rewind(self, cloned_params):
         for p_old, p_new in zip(self.params, cloned_params):
             p_old.data = p_new.data
-    
+
     def update(self, channel_mask=None):
         if channel_mask is not None:  # Load channel_mask from other
             self.channel_mask = channel_mask
@@ -37,13 +37,14 @@ class Pruning:
                         elif mask[i][j] == 0:
                             m[i][j] = torch.ones_like(m[i][j])
                         else:
-                            raise Exception(f"mask should be 0 or 1, cur val is: {mask[i][j]}")
+                            raise Exception(
+                                f"mask should be 0 or 1, cur val is: {mask[i][j]}")
         else:
             self._update()
-    
+
     def _update(self):
         raise NotImplementedError
-    
+
     def zero(self):
         for m, p in zip(self.masks, self.params):
             p.data = m * p.data
@@ -51,7 +52,12 @@ class Pruning:
 
 class RandomPruning(Pruning):
     def __init__(self, params, pruning_rate, exclude_biases=True):
-        super(RandomPruning, self).__init__(params, pruning_rate, exclude_biases)
+        super(
+            RandomPruning,
+            self).__init__(
+            params,
+            pruning_rate,
+            exclude_biases)
 
     def _update(self):
         # Initialize channel_mask
@@ -72,11 +78,16 @@ class RandomPruning(Pruning):
                         m[i][j] = torch.zeros_like(m[i][j])
             # Append channel_mask
             self.channel_mask.append(random_index < border)
-   
+
 
 class MagnitudePruning(Pruning):
     def __init__(self, params, pruning_rate, exclude_biases=True):
-        super(MagnitudePruning, self).__init__(params, pruning_rate, exclude_biases)
+        super(
+            MagnitudePruning,
+            self).__init__(
+            params,
+            pruning_rate,
+            exclude_biases)
 
     def _update(self):
         # Initialize channel_mask
@@ -85,9 +96,9 @@ class MagnitudePruning(Pruning):
             # Get norm of each kernel
             with torch.no_grad():
                 norm_value = p.pow(2).sum(-1).sum(-1).detach().cpu().numpy()
-                sorted_index = norm_value.flatten()
-                sorted_index.sort()
-                border = sorted_index[int(sorted_index.shape[0] * self.pruning_rate)]
+                sorted_index = sorted(norm_value.flatten())
+                border = sorted_index[int(
+                    sorted_index.shape[0] * self.pruning_rate)]
             # Set new mask
             for i in range(p.size()[0]):
                 for j in range(p.size()[1]):

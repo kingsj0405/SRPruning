@@ -8,9 +8,9 @@ class Config:
         # NOTE: Edit this configutation if you want
         self.cfg = EasyDict()
         self.cfg.EXP = EasyDict()
-        self.cfg.EXP.path = '../../REWIND-vdsr-scratch'
+        self.cfg.EXP.path = '../../REWIND-vdsr'
         self.cfg.EXP.version = 'v18'
-        self.cfg.EXP.description = "Rewinding v9 from v14 epoch 3500, random pruning 0.9"
+        self.cfg.EXP.description = "pruning-v15 from training-v14 epoch 3500, random pruning 0.9"
 
         self.cfg.SAVE = EasyDict()
         self.cfg.SAVE.cfg_dir = f"{self.cfg.EXP.path}/config/"
@@ -30,26 +30,26 @@ class Config:
         self.cfg.TRAIN.batch_size = 64
         self.cfg.TRAIN.dataloader_num_worker = 4
         self.cfg.TRAIN.end_epoch = 6000
-        self.cfg.TRAIN.period_log = 5 # epoch
-        self.cfg.TRAIN.period_save = 500 # epoch
+        self.cfg.TRAIN.period_log = 5  # epoch
+        self.cfg.TRAIN.period_save = 500  # epoch
         self.cfg.TRAIN.learning_rate = 1e-4
         self.cfg.TRAIN.lr_step_size = 2000
         self.cfg.TRAIN.lr_step_gamma = 0.1
         self.cfg.TRAIN.resume = False
         self.cfg.TRAIN.load_checkpoint_path = f"{self.cfg.EXP.path}/checkpoint/v14/SRPruning_epoch_3500.pth"
         self.cfg.TRAIN.pruning = True
-        self.cfg.TRAIN.pruning_version = 'v9'
+        self.cfg.TRAIN.pruning_version = 'v15'
         self.cfg.SAVE.pruning_dir = f"{self.cfg.EXP.path}/pruning/{self.cfg.TRAIN.pruning_version}"
         self.cfg.TRAIN.rewinding = True
         self.cfg.TRAIN.load_rewinding_path = f"{self.cfg.EXP.path}/checkpoint/v14/SRPruning_epoch_500.pth"
 
         self.cfg.PRUNE = EasyDict()
-        self.cfg.PRUNE.description = "Magnitude Pruning, pruning rate 0.9"
-        self.cfg.PRUNE.exp_ver = 'v18'
+        self.cfg.PRUNE.description = "Random Pruning, pruning rate 0.9"
+        self.cfg.PRUNE.exp_ver = 'v15'
         self.cfg.PRUNE.trained_checkpoint_path = f"{self.cfg.EXP.path}/checkpoint/v14/SRPruning_epoch_3500.pth"
-        self.cfg.PRUNE.method = 'MagnitudePruning' # 'MagnitudePruning'
+        self.cfg.PRUNE.method = 'RandomPruning'  # 'MagnitudePruning'
         self.cfg.PRUNE.pruning_rate = 0.9
-        self.cfg.PRUNE.random_prune_try_cnt = 1
+        self.cfg.PRUNE.random_prune_try_cnt = 128
 
     def prepare_experiment(self):
         if Path(self.cfg.SAVE.cfg_file_path).exists():

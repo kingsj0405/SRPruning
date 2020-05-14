@@ -120,8 +120,8 @@ def psnr_set5(model, set5_dir, save_dir, save=True):
                                 _rgb2ycbcr(bicubic_img)[:, :, 0],
                                 scale)
             psnr_predicted = psnr(_rgb2ycbcr(label_img)[:, :, 0],
-                                _rgb2ycbcr(predicted_img)[:, :, 0],
-                                scale)
+                                  _rgb2ycbcr(predicted_img)[:, :, 0],
+                                  scale)
             avg_psnr_bicubic += psnr_bicubic
             avg_psnr_predicted += psnr_predicted
             # Save image
