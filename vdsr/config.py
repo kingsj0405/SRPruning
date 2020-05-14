@@ -39,11 +39,12 @@ class Config:
         self.cfg.TRAIN.load_checkpoint_path = f"{self.cfg.EXP.path}/checkpoint/v?/SRPruning_epoch_?.pth"
 
         self.cfg.PRUNE = EasyDict()
-        self.cfg.PRUNE.description = "Random pruning, rate 0.9"
-        self.cfg.PRUNE.exp_ver = 'v9'
+        self.cfg.PRUNE.description = "Magnitude Pruning, pruning rate 0.9"
+        self.cfg.PRUNE.exp_ver = 'v12'
         self.cfg.PRUNE.trained_checkpoint_path = f"{self.cfg.EXP.path}/checkpoint/v14/SRPruning_epoch_3500.pth"
+        self.cfg.PRUNE.method = 'MagnitudePruning' # 'MagnitudePruning'
         self.cfg.PRUNE.pruning_rate = 0.9
-        self.cfg.PRUNE.random_prune_try_cnt = 128
+        self.cfg.PRUNE.random_prune_try_cnt = 1
 
     def prepare_experiment(self):
         if Path(self.cfg.SAVE.cfg_file_path).exists():

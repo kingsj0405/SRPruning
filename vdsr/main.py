@@ -153,7 +153,7 @@ def pruning():
     dir_path = f"{config.EXP.path}/pruning/{config.PRUNE.exp_ver}"
     if not Path(dir_path).exists():
         Path(dir_path).mkdir(parents=True)
-    json_path = f"{dir_path}/random-pruning.json"
+    json_path = f"{dir_path}/pruning-report.json"
     print(f"[INFO] Load from checkpoint {config.PRUNE.trained_checkpoint_path}")
     checkpoint = torch.load(config.PRUNE.trained_checkpoint_path)
     print(f"[INFO] Get psnr set5 from randomly pruned network")
@@ -164,7 +164,12 @@ def pruning():
         net = VDSR().cuda()
         net.load_state_dict(checkpoint['net'])
         # Prune
-        pruning = RandomPruning(net.parameters(), config.PRUNE.pruning_rate)
+        if config.PRUNE.method == 'RandomPruning':
+            pruning = RandomPruning(net.parameters(), config.PRUNE.pruning_rate)
+        elif config.PRUNE.method == 'MagnitudePruning':
+            pruning = MagnitudePruning(net.parameters(), config.PRUNE.pruning_rate)
+        else:
+            raise Exception(f"Not proper config.PRUNE.method, cur var is: {config.PRUNE.method}")
         pruning.update()
         pruning.zero()
         # Calculate psnr5
