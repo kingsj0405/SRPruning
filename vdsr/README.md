@@ -11,7 +11,7 @@ rm -rf ../../REWIND-vdsr-scratch/
 rm -rf ../../REWIND-vdsr-scratch/*/v1*
 rm -rf ../../REWIND-vdsr-scratch/*/v1.0*
 # Format
-autopep8 --in-place --aggressive *.py
+autopep8 --in-place --aggressive */*.py
 # Prune
 CUDA_VISIBLE_DEVICES=0 python main.py random_pruning
 # Visualize

@@ -31,19 +31,19 @@ def train():
     torch.cuda.manual_seed(config.TRAIN.seed)
     print("[INFO] Get training dataset and data_loader")
     train_set = SRDatasetFromDIV2K(dir_path=config.DATA.div2k_dir,
-                                    transform=transforms.Compose([
-                                        transforms.RandomCrop(
-                                            [config.DATA.hr_size, config.DATA.hr_size]),
-                                        transforms.RandomHorizontalFlip(),
-                                        transforms.RandomVerticalFlip(),
-                                        transforms.ToTensor()]),
-                                    transform_lr=transforms.Compose([
-                                        transforms.RandomCrop(
-                                            [config.DATA.lr_size, config.DATA.lr_size]),
-                                        transforms.RandomHorizontalFlip(),
-                                        transforms.RandomVerticalFlip(),
-                                        transforms.ToTensor()
-                                    ]))
+                                   transform=transforms.Compose([
+                                       transforms.RandomCrop(
+                                           [config.DATA.hr_size, config.DATA.hr_size]),
+                                       transforms.RandomHorizontalFlip(),
+                                       transforms.RandomVerticalFlip(),
+                                       transforms.ToTensor()]),
+                                   transform_lr=transforms.Compose([
+                                       transforms.RandomCrop(
+                                           [config.DATA.lr_size, config.DATA.lr_size]),
+                                       transforms.RandomHorizontalFlip(),
+                                       transforms.RandomVerticalFlip(),
+                                       transforms.ToTensor()
+                                   ]))
     train_dataloader = torch.utils.data.DataLoader(
         dataset=train_set,
         num_workers=4,
@@ -79,8 +79,17 @@ def train():
         config.TRAIN.period_log
     for epoch in tqdm(range(start_epoch + 1,
                             config.TRAIN.end_epoch + 1)):
-        for index, hr_image in enumerate(
-                tqdm(train_dataloader)):
+        if epoch == (start_epoch + 1) or epoch % config.TRAIN.period_save == 0:
+            # Save checkpoint
+            torch.save({
+                'config': config,
+                'epoch': epoch,
+                'global_step': global_step,
+                'net': net.state_dict(),
+                'optimizer': optimizer.state_dict(),
+                'scheduler': scheduler.state_dict(),
+            }, f"{config.SAVE.checkpoint_dir}/SRPruning_epoch_{epoch}.pth")
+        for index, hr_image in enumerate(tqdm(train_dataloader)):
             # Make low resolution input from high resolution image
             hr_image = hr_image.cuda()
             lr_image = DownSample2DMatlab(hr_image, 1 / 4, cuda=True)
@@ -88,10 +97,6 @@ def train():
             bicubic_image = UpSample2DMatlab(lr_image, 4, cuda=True)
             out = net(bicubic_image)
             loss = criterion(out, hr_image)
-            # Back-propagation
-            optimizer.zero_grad()
-            loss.backward()
-            optimizer.step()
             # Check training status
             if index % log_timing == 0:
                 # Add images to tensorboard
@@ -104,8 +109,8 @@ def train():
                 writer.add_scalar(
                     '1 MSE', loss.item(), global_step=global_step)
                 app, apb = psnr_set5(net,
-                                        set5_dir=config.DATA.set5_dir,
-                                        save_dir=config.SAVE.save_dir)
+                                     set5_dir=config.DATA.set5_dir,
+                                     save_dir=config.SAVE.save_dir)
                 writer.add_scalar(
                     '2 Set5 PSNR VDSR', app, global_step=global_step)
                 writer.add_scalar(
@@ -114,25 +119,10 @@ def train():
                     '4 learning rate', optimizer.param_groups[0]['lr'],
                     global_step=global_step)
                 writer.flush()
-            if epoch % config.TRAIN.period_save == 0:
-                # Save sample images
-                # save_image(lr_image,
-                #            f"{config.SAVE.save_dir}/epoch_{epoch}_lr.png")
-                # save_image(out,
-                #            f"{config.SAVE.save_dir}/epoch_{epoch}_out.png")
-                # save_image(model_output,
-                #            f"{config.SAVE.save_dir}/epoch_{epoch}_model_output.png")
-                # save_image(hr_image,
-                #            f"{config.SAVE.save_dir}/epoch_{epoch}_hr.png")
-                # Save checkpoint
-                torch.save({
-                    'config': config,
-                    'epoch': epoch,
-                    'global_step': global_step,
-                    'net': net.state_dict(),
-                    'optimizer': optimizer.state_dict(),
-                    'scheduler': scheduler.state_dict(),
-                }, f"{config.SAVE.checkpoint_dir}/SRPruning_epoch_{epoch}.pth")
+            # Back-propagation
+            optimizer.zero_grad()
+            loss.backward()
+            optimizer.step()
             # Add count
             global_step += config.TRAIN.batch_size
         scheduler.step()
