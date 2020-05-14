@@ -40,7 +40,6 @@ class RandomPruning():
                                    m)
             self.masks[i] = new_mask
 
-
     def zero(self):
         for m, p in zip(self.masks, self.params):
             p.data = m * p.data
@@ -59,7 +58,7 @@ class MagnitudePruning():
         self.masks = []
         for p in self.params:
             self.masks.append(torch.ones_like(p))
-    
+
     def _border(self, flat_params):
         assert flat_params.dim() == 1
         # Compute border value
@@ -79,13 +78,13 @@ class MagnitudePruning():
     def step(self):
         # Gather all masked parameters
         flat_params = torch.cat([p[m == 1].view(-1)
-                                for m, p in zip(self.masks, self.params)])
+                                 for m, p in zip(self.masks, self.params)])
         # Compute border value
         border = self._border(flat_params)
         # Calculate updated masks
         for i, (m, p) in enumerate(zip(self.masks, self.params)):
             new_mask = torch.where(torch.abs(p) < border,
-                                    torch.zeros_like(p), m)
+                                   torch.zeros_like(p), m)
             self.masks[i] = new_mask
 
     def zero(self):

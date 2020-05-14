@@ -19,18 +19,19 @@ class CNNLayerVisualization():
         Produces an image that minimizes the loss of a convolution
         operation for a specific layer and filter
     """
-    def __init__(self, model, conv_index, layer_index, filter_index, save_dir='../generated'):
+
+    def __init__(self, model, conv_index, layer_index,
+                 filter_index, save_dir='../generated'):
         self.model = model
         self.model.eval()
-        self.conv_index = conv_index # Semantic conv index
-        self.layer_index = layer_index # Real conv index
+        self.conv_index = conv_index  # Semantic conv index
+        self.layer_index = layer_index  # Real conv index
         self.filter_index = filter_index
         self.conv_output = 0
         self.save_dir = save_dir
         # Create the folder to export images if not exists
         if not os.path.exists(self.save_dir):
             os.makedirs(self.save_dir)
-
 
     def visualise_layer_with_hooks(self):
         def hook_function(module, grad_in, grad_out):

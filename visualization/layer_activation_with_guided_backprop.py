@@ -18,6 +18,7 @@ class GuidedBackprop():
     """
        Produces gradients generated with guided back propagation from the given image
     """
+
     def __init__(self, model):
         self.model = model
         self.gradients = None
@@ -47,7 +48,8 @@ class GuidedBackprop():
             # Get last forward output
             corresponding_forward_output = self.forward_relu_outputs[-1]
             corresponding_forward_output[corresponding_forward_output > 0] = 1
-            modified_grad_out = corresponding_forward_output * torch.clamp(grad_in[0], min=0.0)
+            modified_grad_out = corresponding_forward_output * \
+                torch.clamp(grad_in[0], min=0.0)
             del self.forward_relu_outputs[-1]  # Remove last forward output
             return (modified_grad_out,)
 
@@ -63,7 +65,8 @@ class GuidedBackprop():
                 module.register_backward_hook(relu_backward_hook_function)
                 module.register_forward_hook(relu_forward_hook_function)
 
-    def generate_gradients(self, input_image, target_class, cnn_layer, filter_pos):
+    def generate_gradients(
+            self, input_image, target_class, cnn_layer, filter_pos):
         self.model.zero_grad()
         # Forward pass
         x = input_image
@@ -93,17 +96,25 @@ if __name__ == '__main__':
         get_example_params(target_example)
 
     # File export name
-    file_name_to_export = file_name_to_export + '_layer' + str(cnn_layer) + '_filter' + str(filter_pos)
+    file_name_to_export = file_name_to_export + '_layer' + \
+        str(cnn_layer) + '_filter' + str(filter_pos)
     # Guided backprop
     GBP = GuidedBackprop(pretrained_model)
     # Get gradients
-    guided_grads = GBP.generate_gradients(prep_img, target_class, cnn_layer, filter_pos)
+    guided_grads = GBP.generate_gradients(
+        prep_img, target_class, cnn_layer, filter_pos)
     # Save colored gradients
-    save_gradient_images(guided_grads, file_name_to_export + '_Guided_BP_color')
+    save_gradient_images(
+        guided_grads,
+        file_name_to_export +
+        '_Guided_BP_color')
     # Convert to grayscale
     grayscale_guided_grads = convert_to_grayscale(guided_grads)
     # Save grayscale gradients
-    save_gradient_images(grayscale_guided_grads, file_name_to_export + '_Guided_BP_gray')
+    save_gradient_images(
+        grayscale_guided_grads,
+        file_name_to_export +
+        '_Guided_BP_gray')
     # Positive and negative saliency maps
     pos_sal, neg_sal = get_positive_negative_saliency(guided_grads)
     save_gradient_images(pos_sal, file_name_to_export + '_pos_sal')
