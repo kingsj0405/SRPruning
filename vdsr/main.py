@@ -150,18 +150,19 @@ def pruning_random():
     torch.manual_seed(config.TRAIN.seed)
     torch.cuda.manual_seed(config.TRAIN.seed)
     print(f"[INFO] Prepare save directory for pruning")
-    dir_path = f"{config.EXP.path}/visualization/{config.PRUNE.exp_ver}"
+    dir_path = f"{config.EXP.path}/pruning/{config.PRUNE.exp_ver}"
     if not Path(dir_path).exists():
         Path(dir_path).mkdir(parents=True)
     json_path = f"{dir_path}/random-pruning.json"
     print(f"[INFO] Load from checkpoint {config.PRUNE.trained_checkpoint_path}")
     checkpoint = torch.load(config.PRUNE.trained_checkpoint_path)
-    net = VDSR().cuda()
-    net.load_state_dict(checkpoint['net'])
     print(f"[INFO] Get psnr set5 from randomly pruned network")
     result = EasyDict()
     psnrs = []
     for i in tqdm(range(1, config.PRUNE.random_prune_try_cnt + 1)):
+        # Load net
+        net = VDSR().cuda()
+        net.load_state_dict(checkpoint['net'])
         # Prune
         pruning = RandomPruning(net.parameters(), config.PRUNE.pruning_rate)
         pruning.step()

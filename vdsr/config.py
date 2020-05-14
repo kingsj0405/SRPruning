@@ -39,9 +39,9 @@ class Config:
         self.cfg.TRAIN.load_checkpoint_path = f"{self.cfg.EXP.path}/checkpoint/v?/SRPruning_epoch_?.pth"
 
         self.cfg.PRUNE = EasyDict()
-        self.cfg.PRUNE.exp_ver = 'v1'
+        self.cfg.PRUNE.exp_ver = 'v2'
         self.cfg.PRUNE.trained_checkpoint_path = f"{self.cfg.EXP.path}/checkpoint/v14/SRPruning_epoch_3500.pth"
-        self.cfg.PRUNE.pruning_rate = 0.9
+        self.cfg.PRUNE.pruning_rate = 0.1
         self.cfg.PRUNE.random_prune_try_cnt = 128
 
     def prepare_experiment(self):
