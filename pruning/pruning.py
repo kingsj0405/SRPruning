@@ -41,7 +41,7 @@ class RandomPruning():
                     if random_index[i][j] < border:
                         m[i][j] = torch.zeros_like(m[i][j])
         # Save random_index
-        self.random_index = random_index < border
+        self.mask_index = random_index < border
 
     def zero(self):
         for m, p in zip(self.masks, self.params):
@@ -62,15 +62,6 @@ class MagnitudePruning():
         for p in self.params:
             self.masks.append(torch.ones_like(p))
 
-    def _border(self, flat_params):
-        assert flat_params.dim() == 1
-        # Compute border value
-        with torch.no_grad():
-            border_index = round(pruning_rate * flat_params.size()[0])
-            values, __indices = torch.sort(torch.abs(flat_params))
-            border = values[border_index]
-        return border
-
     def clone_params(self):
         return [p.clone() for p in self.params]
 
@@ -79,16 +70,19 @@ class MagnitudePruning():
             p_old.data = p_new.data
 
     def step(self):
-        # Gather all masked parameters
-        flat_params = torch.cat([p[m == 1].view(-1)
-                                 for m, p in zip(self.masks, self.params)])
-        # Compute border value
-        border = self._border(flat_params)
-        # Calculate updated masks
         for i, (m, p) in enumerate(zip(self.masks, self.params)):
-            new_mask = torch.where(torch.abs(p) < border,
-                                   torch.zeros_like(p), m)
-            self.masks[i] = new_mask
+            # Get norm of each kernel
+            with torch.no_grad():
+                norm_value = p.pow(2).sum(-1).sum(-1).detach().cpu().numpy()
+                sorted_index = norm_value.flatten()
+                sorted_index.sort()
+                border = sorted_index[int(sorted_index.shape[0] * self.pruning_rate)]
+            # Set new mask
+            for i in range(p.size()[0]):
+                for j in range(p.size()[1]):
+                    if norm_value[i][j] < border:
+                        m[i][j] = torch.zeros_like(m[i][j])
+        self.mask_index = norm_value < border
 
     def zero(self):
         for m, p in zip(self.masks, self.params):
