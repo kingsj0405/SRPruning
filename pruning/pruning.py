@@ -25,13 +25,19 @@ class Pruning:
         for p_old, p_new in zip(self.params, cloned_params):
             p_old.data = p_new.data
     
-    def update(self, mask_index=None):
-        if mask_index is not None:  # Load mask_index from other
-            self.mask_index = np.array(mask_index)
-            for m in self.masks:
-                for i in range(self.mask_index.shape[0]):
-                    for j in range(self.mask_index.shape[1]):
-                        m[i][j] = torch.zeros_like(m[i][j])
+    def update(self, channel_mask=None):
+        if channel_mask is not None:  # Load channel_mask from other
+            self.channel_mask = channel_mask
+            for layer_index, mask in enumerate(self.channel_mask):
+                m = self.masks[layer_index]
+                for i in range(mask.shape[0]):
+                    for j in range(mask.shape[1]):
+                        if mask[i][j] == 1:
+                            m[i][j] = torch.zeros_like(m[i][j])
+                        elif mask[i][j] == 0:
+                            m[i][j] = torch.ones_like(m[i][j])
+                        else:
+                            raise Exception(f"mask should be 0 or 1, cur val is: {mask[i][j]}")
         else:
             self._update()
     
@@ -45,9 +51,11 @@ class Pruning:
 
 class RandomPruning(Pruning):
     def __init__(self, params, pruning_rate, exclude_biases=True):
-        super(RandomPruning, self).__init__()
+        super(RandomPruning, self).__init__(params, pruning_rate, exclude_biases)
 
     def _update(self):
+        # Initialize channel_mask
+        self.channel_mask = []
         for i, (m, p) in enumerate(zip(self.masks, self.params)):
             # Generate random index and border
             with torch.no_grad():
@@ -62,15 +70,17 @@ class RandomPruning(Pruning):
                     index = i * p.size()[1] + j
                     if random_index[i][j] < border:
                         m[i][j] = torch.zeros_like(m[i][j])
-        # Save random_index
-        self.mask_index = random_index < border
+            # Append channel_mask
+            self.channel_mask.append(random_index < border)
    
 
 class MagnitudePruning(Pruning):
     def __init__(self, params, pruning_rate, exclude_biases=True):
-        super(MagnitudePruning, self).__init__()
+        super(MagnitudePruning, self).__init__(params, pruning_rate, exclude_biases)
 
     def _update(self):
+        # Initialize channel_mask
+        self.channel_mask = []
         for i, (m, p) in enumerate(zip(self.masks, self.params)):
             # Get norm of each kernel
             with torch.no_grad():
@@ -83,4 +93,5 @@ class MagnitudePruning(Pruning):
                 for j in range(p.size()[1]):
                     if norm_value[i][j] < border:
                         m[i][j] = torch.zeros_like(m[i][j])
-        self.mask_index = norm_value < border
+            # Append channel_mask
+            self.channel_mask.append(norm_value < border)

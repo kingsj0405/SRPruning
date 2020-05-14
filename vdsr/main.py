@@ -2,6 +2,7 @@ import fire
 import numpy
 import json
 import torch
+import pickle
 
 from easydict import EasyDict
 from pathlib import Path
@@ -86,11 +87,12 @@ def train():
         with open(json_path, 'r') as f:
             pruning_report = json.load(f)
             pruned_index = int(pruning_report['statistics']['argmax']) + 1
-        mask_index_path = f"{config.SAVE.pruning_dir}/mask_index_{pruned_index}.txt"
-        print(f"[INFO] Load mask index from {mask_index_path}")
-        mask_index = numpy.loadtxt(mask_index_path)
+        channel_mask_path = f"{config.SAVE.pruning_dir}/channel_mask_{pruned_index}.pickle"
+        print(f"[INFO] Load mask index from {channel_mask_path}")
+        with open(channel_mask_path, 'rb') as f:
+            channel_mask = pickle.load(f)
         pruning = Pruning(net.parameters(), 0.1)
-        pruning.update(mask_index)
+        pruning.update(channel_mask)
     criterion = torch.nn.MSELoss().cuda()
     print("[INFO] Start training loop")
     net.train()
@@ -200,9 +202,8 @@ def pruning():
                             save_dir=config.SAVE.save_dir,
                             save=False)
         # Save results
-        numpy.savetxt(f"{dir_path}/mask_index_{i}.txt",
-                      pruning.mask_index,
-                      fmt='%d')
+        with open(f"{dir_path}/channel_mask_{i}.pickle", 'wb') as f:
+            pickle.dump(pruning.channel_mask, f)
         psnrs.append(psnr)
     result.psnrs = psnrs
     print(f"[INFO] Get meta and statistics of experiment")
