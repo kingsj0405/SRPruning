@@ -4,6 +4,7 @@ import json
 import torch
 
 from easydict import EasyDict
+from pathlib import Path
 from torch.utils.tensorboard import SummaryWriter
 from torchvision import transforms
 from torchvision.utils import save_image
@@ -81,7 +82,7 @@ def train():
     # Save checkpoint
     torch.save({
         'config': config,
-        'epoch': epoch,
+        'epoch': 0,
         'global_step': global_step,
         'net': net.state_dict(),
         'optimizer': optimizer.state_dict(),
@@ -138,49 +139,56 @@ def train():
         scheduler.step()
 
 
-def random_pruning(checkpoint_path, save_dir, pruning_rate, try_cnt):
+def pruning_random():
+    print("[INFO] Set configuration")
+    config = Config()
+    # FIXME: After this issue resolved
+    # https://github.com/makinacorpus/easydict/issues/20
+    config = config.cfg
     print("[INFO] Set random seed")
-    numpy.random.seed(903)
-    torch.manual_seed(903)
-    torch.cuda.manual_seed(903)
-    print(f"[INFO] Load from checkpoint {checkpoint_path}")
-    checkpoint = torch.load(checkpoint_path)
+    numpy.random.seed(config.TRAIN.seed)
+    torch.manual_seed(config.TRAIN.seed)
+    torch.cuda.manual_seed(config.TRAIN.seed)
+    print(f"[INFO] Prepare save directory for pruning")
+    dir_path = f"{config.EXP.path}/visualization/{config.PRUNE.exp_ver}"
+    if not Path(dir_path).exists():
+        Path(dir_path).mkdir(parents=True)
+    json_path = f"{dir_path}/random-pruning.json"
+    print(f"[INFO] Load from checkpoint {config.PRUNE.trained_checkpoint_path}")
+    checkpoint = torch.load(config.PRUNE.trained_checkpoint_path)
     net = VDSR().cuda()
     net.load_state_dict(checkpoint['net'])
-    print(f"[INFO] Get psnr5 from randomly pruned network")
-    data = []
+    print(f"[INFO] Get psnr set5 from randomly pruned network")
+    result = EasyDict()
     psnrs = []
-    for i in tqdm(range(1, try_cnt + 1)):
+    for i in tqdm(range(1, config.PRUNE.random_prune_try_cnt + 1)):
         # Prune
-        pruning = RandomPruning(net.parameters(), pruning_rate)
+        pruning = RandomPruning(net.parameters(), config.PRUNE.pruning_rate)
         pruning.step()
         pruning.zero()
-        # # Calculate psnr5
-        # psnr, _ = psnr_set5(net, set5_dir, save_dir, False)
-        # # Append to lists
-        # data.append({
-        #     'psnr': psnr,
-        #     'masks': pruning.masks
-        # })
-        # psnrs.append(psnr)
-    # print(f"[INFO] psnr statistics")
-    # psnrs = numpy.array(psnrs)
-    # statistics = {
-    #     'min': psnrs.min(),
-    #     'max': psnrs.max(),
-    #     'median': psnrs.median(),
-    #     'mean': psnrs.mean()
-    # }
-    # print(f"[INFO] Save masks and psnr value to {save_dir}/random-pruning.json")
-    # save_data = EasyDict()
-    # save_data.statistics = statistics
-    # save_data.data = data
-    # with open(f"{save_dir}/random-pruning.json", 'w') as f:
-    #     f.write(json.dumps(save_data, index=4))
-
-
-def test():
-    raise NotImplementedError
+        # Calculate psnr5
+        psnr, _ = psnr_set5(net,
+                            set5_dir=config.DATA.set5_dir,
+                            save_dir=config.SAVE.save_dir,
+                            save=False)
+        # Save results
+        numpy.savetxt(f"{dir_path}/random_index_{i}.txt",
+                      pruning.random_index,
+                      fmt='%d')
+        psnrs.append(psnr)
+    result.psnrs = psnrs
+    print(f"[INFO] Get meta and statistics of experiment")
+    result.meta = EasyDict()
+    result.meta.config = config.PRUNE
+    result.statistics = EasyDict()
+    psnrs = numpy.array(psnrs)
+    result.statistics.min = psnrs.min()
+    result.statistics.max = psnrs.max()
+    result.statistics.mean = psnrs.mean()
+    print(f"[INFO] Save masks and psnr value to {json_path}")
+    with open(json_path, 'w') as f:
+        json_txt = json.dumps(result, indent=4)
+        f.write(json_txt)
 
 
 def filter(checkpoint_path, save_dir, target_conv_index, filter_index):
@@ -204,7 +212,6 @@ def filter(checkpoint_path, save_dir, target_conv_index, filter_index):
 if __name__ == '__main__':
     fire.Fire({
         'train': train,
-        'test': test,
-        'filter': filter,
-        'random_pruning': random_pruning
+        'pruning_random': pruning_random,
+        'filter': filter
     })

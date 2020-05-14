@@ -1,3 +1,4 @@
+import numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -14,7 +15,7 @@ class RandomPruning():
             self.params = [p for p in params]
         # Initilaize masks
         self.masks = []
-        for p in self.params:
+        for i, p in enumerate(self.params):
             self.masks.append(torch.ones_like(p))
 
     def clone_params(self):
@@ -26,19 +27,21 @@ class RandomPruning():
 
     def step(self):
         for i, (m, p) in enumerate(zip(self.masks, self.params)):
-            # Generate random index
-            # FIXME: Choose from 1 masks only
-            random_index = torch.arange(p.size()[:1])
-            print(f"random_index.shape before view: {random_index.shape}")
-            np.random.shuffle(random_index)
-            random_index = random_index.view(-1)
-            print(f"random_index.shape after view: {random_index.shape}")
+            # Generate random index and border
+            with torch.no_grad():
+                p_size = p.size()[0] * p.size()[1]
+                random_index = np.arange(p_size, dtype=np.uint32)
+                np.random.shuffle(random_index)
+                random_index = random_index.reshape(p.size()[:2])
+                border = np.round(p_size * self.pruning_rate)
             # Update mask
-            border = np.round(random_index.shape[0] / pruning_rate)
-            new_mask = torch.where(random_index < border,
-                                   torch.zeros_like(p),
-                                   m)
-            self.masks[i] = new_mask
+            for i in range(p.size()[0]):
+                for j in range(p.size()[1]):
+                    index = i * p.size()[1] + j
+                    if random_index[i][j] < border:
+                        m[i][j] = torch.zeros_like(m[i][j])
+        # Save random_index
+        self.random_index = random_index < border
 
     def zero(self):
         for m, p in zip(self.masks, self.params):

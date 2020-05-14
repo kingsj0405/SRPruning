@@ -85,46 +85,47 @@ def psnr_set5(model, set5_dir, save_dir, save=True):
     image_list = list(Path(set5_dir).glob('*.bmp'))
     Path(save_dir).mkdir(parents=True, exist_ok=True)
     for image_path in image_list:
-        count += 1
-        # Load label image
-        label_img = _load_img_array(image_path)
-        label_img = torch.from_numpy(label_img)
-        label_img = label_img.unsqueeze(0)
-        label_img = Variable(label_img).cuda()
-        # Make bicubic image and net-through image
-        # NOTE: permute for tensor
-        label_img = label_img.permute(0, 3, 1, 2)
-        bicubic_img = DownSample2DMatlab(label_img, 1 / scale)
-        bicubic_img = bicubic_img.clamp(0, 1)
-        bicubic_img = torch.round(bicubic_img * 255) / 255
-        bicubic_img = UpSample2DMatlab(bicubic_img, scale)
-        bicubic_img = bicubic_img.clamp(0, 1)
-        bicubic_img = torch.round(bicubic_img * 255) / 255
-        predicted_img = model(bicubic_img)
-        label_img = label_img.permute(0, 2, 3, 1)
-        bicubic_img = bicubic_img.permute(0, 2, 3, 1)
-        predicted_img = predicted_img.permute(0, 2, 3, 1)
-        # Denormalize
-        label_img = label_img[0].cpu().data.numpy()
-        label_img = label_img.clip(0, 1)
-        label_img = (label_img * 255).astype(np.uint8)
-        bicubic_img = bicubic_img[0].cpu().data.numpy()
-        bicubic_img = bicubic_img.clip(0, 1)
-        bicubic_img = (bicubic_img * 255).astype(np.uint8)
-        predicted_img = predicted_img[0].cpu().data.numpy()
-        predicted_img = predicted_img.clip(0, 1)
-        predicted_img = (predicted_img * 255).astype(np.uint8)
-        # Get psnr of bicubic, predicted
-        psnr_bicubic = psnr(_rgb2ycbcr(label_img)[:, :, 0],
-                            _rgb2ycbcr(bicubic_img)[:, :, 0],
-                            scale)
-        psnr_predicted = psnr(_rgb2ycbcr(label_img)[:, :, 0],
-                              _rgb2ycbcr(predicted_img)[:, :, 0],
-                              scale)
-        avg_psnr_bicubic += psnr_bicubic
-        avg_psnr_predicted += psnr_predicted
-        # Save image
-        if save:
-            Image.fromarray(predicted_img).save(
-                f"{save_dir}/Set5_{image_path.stem}.png")
+        with torch.no_grad():
+            count += 1
+            # Load label image
+            label_img = _load_img_array(image_path)
+            label_img = torch.from_numpy(label_img)
+            label_img = label_img.unsqueeze(0)
+            label_img = Variable(label_img).cuda()
+            # Make bicubic image and net-through image
+            # NOTE: permute for tensor
+            label_img = label_img.permute(0, 3, 1, 2)
+            bicubic_img = DownSample2DMatlab(label_img, 1 / scale)
+            bicubic_img = bicubic_img.clamp(0, 1)
+            bicubic_img = torch.round(bicubic_img * 255) / 255
+            bicubic_img = UpSample2DMatlab(bicubic_img, scale)
+            bicubic_img = bicubic_img.clamp(0, 1)
+            bicubic_img = torch.round(bicubic_img * 255) / 255
+            predicted_img = model(bicubic_img)
+            label_img = label_img.permute(0, 2, 3, 1)
+            bicubic_img = bicubic_img.permute(0, 2, 3, 1)
+            predicted_img = predicted_img.permute(0, 2, 3, 1)
+            # Denormalize
+            label_img = label_img[0].cpu().data.numpy()
+            label_img = label_img.clip(0, 1)
+            label_img = (label_img * 255).astype(np.uint8)
+            bicubic_img = bicubic_img[0].cpu().data.numpy()
+            bicubic_img = bicubic_img.clip(0, 1)
+            bicubic_img = (bicubic_img * 255).astype(np.uint8)
+            predicted_img = predicted_img[0].cpu().data.numpy()
+            predicted_img = predicted_img.clip(0, 1)
+            predicted_img = (predicted_img * 255).astype(np.uint8)
+            # Get psnr of bicubic, predicted
+            psnr_bicubic = psnr(_rgb2ycbcr(label_img)[:, :, 0],
+                                _rgb2ycbcr(bicubic_img)[:, :, 0],
+                                scale)
+            psnr_predicted = psnr(_rgb2ycbcr(label_img)[:, :, 0],
+                                _rgb2ycbcr(predicted_img)[:, :, 0],
+                                scale)
+            avg_psnr_bicubic += psnr_bicubic
+            avg_psnr_predicted += psnr_predicted
+            # Save image
+            if save:
+                Image.fromarray(predicted_img).save(
+                    f"{save_dir}/Set5_{image_path.stem}.png")
     return (avg_psnr_predicted / count), (avg_psnr_bicubic / count)

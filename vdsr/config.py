@@ -9,8 +9,8 @@ class Config:
         self.cfg = EasyDict()
         self.cfg.EXP = EasyDict()
         self.cfg.EXP.path = '../../REWIND-vdsr-scratch'
-        self.cfg.EXP.version = 'v16'
-        self.cfg.EXP.description = "From 1e-4, step 500, until 6000"
+        self.cfg.EXP.version = 'v17'
+        self.cfg.EXP.description = "From 1e-4, step 3000, until 9000"
 
         self.cfg.SAVE = EasyDict()
         self.cfg.SAVE.cfg_dir = f"{self.cfg.EXP.path}/config/"
@@ -29,14 +29,20 @@ class Config:
         self.cfg.TRAIN.seed = 903
         self.cfg.TRAIN.batch_size = 64
         self.cfg.TRAIN.dataloader_num_worker = 4
-        self.cfg.TRAIN.end_epoch = 6000
+        self.cfg.TRAIN.end_epoch = 9000
         self.cfg.TRAIN.period_log = 2  # per epoch
-        self.cfg.TRAIN.period_save = 1000  # epoch
+        self.cfg.TRAIN.period_save = 500 # epoch
         self.cfg.TRAIN.learning_rate = 1e-4
-        self.cfg.TRAIN.lr_step_size = 1000
+        self.cfg.TRAIN.lr_step_size = 3000
         self.cfg.TRAIN.lr_step_gamma = 0.1
         self.cfg.TRAIN.resume = False
         self.cfg.TRAIN.load_checkpoint_path = f"{self.cfg.EXP.path}/checkpoint/v?/SRPruning_epoch_?.pth"
+
+        self.cfg.PRUNE = EasyDict()
+        self.cfg.PRUNE.exp_ver = 'v1'
+        self.cfg.PRUNE.trained_checkpoint_path = f"{self.cfg.EXP.path}/checkpoint/v14/SRPruning_epoch_3500.pth"
+        self.cfg.PRUNE.pruning_rate = 0.9
+        self.cfg.PRUNE.random_prune_try_cnt = 128
 
     def prepare_experiment(self):
         if Path(self.cfg.SAVE.cfg_file_path).exists():
