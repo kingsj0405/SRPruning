@@ -9,8 +9,8 @@ class Config:
         self.cfg = EasyDict()
         self.cfg.EXP = EasyDict()
         self.cfg.EXP.path = '../../REWIND-vdsr'
-        self.cfg.EXP.version = 'v18'
-        self.cfg.EXP.description = "pruning-v15 from training-v14 epoch 3500, random pruning 0.9"
+        self.cfg.EXP.version = 'v19'
+        self.cfg.EXP.description = "pruning-v18 from training-v14 epoch 3500, magnitude pruning 0.9"
 
         self.cfg.SAVE = EasyDict()
         self.cfg.SAVE.cfg_dir = f"{self.cfg.EXP.path}/config/"
@@ -38,7 +38,7 @@ class Config:
         self.cfg.TRAIN.resume = False
         self.cfg.TRAIN.load_checkpoint_path = f"{self.cfg.EXP.path}/checkpoint/v14/SRPruning_epoch_3500.pth"
         self.cfg.TRAIN.pruning = True
-        self.cfg.TRAIN.pruning_version = 'v15'
+        self.cfg.TRAIN.pruning_version = 'v18'
         self.cfg.SAVE.pruning_dir = f"{self.cfg.EXP.path}/pruning/{self.cfg.TRAIN.pruning_version}"
         self.cfg.TRAIN.rewinding = True
         self.cfg.TRAIN.load_rewinding_path = f"{self.cfg.EXP.path}/checkpoint/v14/SRPruning_epoch_500.pth"
