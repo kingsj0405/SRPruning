@@ -77,18 +77,18 @@ def train():
     writer = SummaryWriter(config.SAVE.summary_dir)
     log_timing = (len(train_set) // config.TRAIN.batch_size) / \
         config.TRAIN.period_log
+    print("[INFO] Save checkpoint before training")
+    # Save checkpoint
+    torch.save({
+        'config': config,
+        'epoch': epoch,
+        'global_step': global_step,
+        'net': net.state_dict(),
+        'optimizer': optimizer.state_dict(),
+        'scheduler': scheduler.state_dict(),
+    }, f"{config.SAVE.checkpoint_dir}/SRPruning_epoch_0.pth")
     for epoch in tqdm(range(start_epoch + 1,
                             config.TRAIN.end_epoch + 1)):
-        if epoch == (start_epoch + 1) or epoch % config.TRAIN.period_save == 0:
-            # Save checkpoint
-            torch.save({
-                'config': config,
-                'epoch': epoch,
-                'global_step': global_step,
-                'net': net.state_dict(),
-                'optimizer': optimizer.state_dict(),
-                'scheduler': scheduler.state_dict(),
-            }, f"{config.SAVE.checkpoint_dir}/SRPruning_epoch_{epoch}.pth")
         for index, hr_image in enumerate(tqdm(train_dataloader)):
             # Make low resolution input from high resolution image
             hr_image = hr_image.cuda()
@@ -125,6 +125,16 @@ def train():
             optimizer.step()
             # Add count
             global_step += config.TRAIN.batch_size
+        if epoch % config.TRAIN.period_save == 0:
+            # Save checkpoint
+            torch.save({
+                'config': config,
+                'epoch': epoch,
+                'global_step': global_step,
+                'net': net.state_dict(),
+                'optimizer': optimizer.state_dict(),
+                'scheduler': scheduler.state_dict(),
+            }, f"{config.SAVE.checkpoint_dir}/SRPruning_epoch_{epoch}.pth")
         scheduler.step()
 
 
