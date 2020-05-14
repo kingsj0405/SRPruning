@@ -139,7 +139,7 @@ def train():
         scheduler.step()
 
 
-def pruning_random():
+def pruning():
     print("[INFO] Set configuration")
     config = Config()
     # FIXME: After this issue resolved
@@ -165,7 +165,7 @@ def pruning_random():
         net.load_state_dict(checkpoint['net'])
         # Prune
         pruning = RandomPruning(net.parameters(), config.PRUNE.pruning_rate)
-        pruning.step()
+        pruning.update()
         pruning.zero()
         # Calculate psnr5
         psnr, _ = psnr_set5(net,
@@ -186,52 +186,7 @@ def pruning_random():
     result.statistics.min = psnrs.min()
     result.statistics.max = psnrs.max()
     result.statistics.mean = psnrs.mean()
-    print(f"[INFO] Save masks and psnr value to {json_path}")
-    with open(json_path, 'w') as f:
-        json_txt = json.dumps(result, indent=4)
-        f.write(json_txt)
-
-
-def pruning_magnitude():
-    print("[INFO] Set configuration")
-    config = Config()
-    # FIXME: After this issue resolved
-    # https://github.com/makinacorpus/easydict/issues/20
-    config = config.cfg
-    print("[INFO] Set random seed")
-    numpy.random.seed(config.TRAIN.seed)
-    torch.manual_seed(config.TRAIN.seed)
-    torch.cuda.manual_seed(config.TRAIN.seed)
-    print(f"[INFO] Prepare save directory for pruning")
-    dir_path = f"{config.EXP.path}/pruning/{config.PRUNE.exp_ver}"
-    if not Path(dir_path).exists():
-        Path(dir_path).mkdir(parents=True)
-    json_path = f"{dir_path}/random-pruning.json"
-    print(f"[INFO] Load from checkpoint {config.PRUNE.trained_checkpoint_path}")
-    checkpoint = torch.load(config.PRUNE.trained_checkpoint_path)
-    print(f"[INFO] Get psnr set5 from randomly pruned network")
-    result = EasyDict()
-    # Load net
-    net = VDSR().cuda()
-    net.load_state_dict(checkpoint['net'])
-    # Prune
-    pruning = MagnitudePruning(net.parameters(), config.PRUNE.pruning_rate)
-    pruning.step()
-    pruning.zero()
-    # Calculate psnr5
-    psnr, _ = psnr_set5(net,
-                        set5_dir=config.DATA.set5_dir,
-                        save_dir=config.SAVE.save_dir,
-                        save=False)
-    # Save results
-    numpy.savetxt(f"{dir_path}/mask_index.txt",
-                    pruning.mask_index,
-                    fmt='%d')
-    print(f"[INFO] Get meta and statistics of experiment")
-    result.meta = EasyDict()
-    result.meta.config = config.PRUNE
-    result._result = EasyDict()
-    result._result.psnr = psnr
+    result.statistics.argmax = int(psnrs.argmax())
     print(f"[INFO] Save masks and psnr value to {json_path}")
     with open(json_path, 'w') as f:
         json_txt = json.dumps(result, indent=4)
@@ -259,7 +214,6 @@ def filter(checkpoint_path, save_dir, target_conv_index, filter_index):
 if __name__ == '__main__':
     fire.Fire({
         'train': train,
-        'pruning_random': pruning_random,
-        'pruning_magnitude': pruning_magnitude,
+        'pruning': pruning,
         'filter': filter
     })

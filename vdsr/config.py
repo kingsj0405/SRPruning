@@ -39,8 +39,8 @@ class Config:
         self.cfg.TRAIN.load_checkpoint_path = f"{self.cfg.EXP.path}/checkpoint/v?/SRPruning_epoch_?.pth"
 
         self.cfg.PRUNE = EasyDict()
-        self.cfg.PRUNE.description = "L2 Magnitude pruning, rate 0.9"
-        self.cfg.PRUNE.exp_ver = 'v6'
+        self.cfg.PRUNE.description = "Random pruning, rate 0.9"
+        self.cfg.PRUNE.exp_ver = 'v9'
         self.cfg.PRUNE.trained_checkpoint_path = f"{self.cfg.EXP.path}/checkpoint/v14/SRPruning_epoch_3500.pth"
         self.cfg.PRUNE.pruning_rate = 0.9
         self.cfg.PRUNE.random_prune_try_cnt = 128

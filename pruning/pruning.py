@@ -25,7 +25,7 @@ class RandomPruning():
         for p_old, p_new in zip(self.params, cloned_params):
             p_old.data = p_new.data
 
-    def step(self):
+    def update(self):
         for i, (m, p) in enumerate(zip(self.masks, self.params)):
             # Generate random index and border
             with torch.no_grad():
@@ -69,7 +69,7 @@ class MagnitudePruning():
         for p_old, p_new in zip(self.params, cloned_params):
             p_old.data = p_new.data
 
-    def step(self):
+    def update(self):
         for i, (m, p) in enumerate(zip(self.masks, self.params)):
             # Get norm of each kernel
             with torch.no_grad():
