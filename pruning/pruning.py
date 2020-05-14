@@ -4,7 +4,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 
-class RandomPruning():
+class Pruning:
     def __init__(self, params, pruning_rate, exclude_biases=True):
         # Set variables
         self.pruning_rate = pruning_rate
@@ -24,8 +24,30 @@ class RandomPruning():
     def rewind(self, cloned_params):
         for p_old, p_new in zip(self.params, cloned_params):
             p_old.data = p_new.data
+    
+    def update(self, mask_index=None):
+        if mask_index is not None:  # Load mask_index from other
+            self.mask_index = np.array(mask_index)
+            for m in self.masks:
+                for i in range(self.mask_index.shape[0]):
+                    for j in range(self.mask_index.shape[1]):
+                        m[i][j] = torch.zeros_like(m[i][j])
+        else:
+            self._update()
+    
+    def _update(self):
+        raise NotImplementedError
+    
+    def zero(self):
+        for m, p in zip(self.masks, self.params):
+            p.data = m * p.data
 
-    def update(self):
+
+class RandomPruning(Pruning):
+    def __init__(self, params, pruning_rate, exclude_biases=True):
+        super(RandomPruning, self).__init__()
+
+    def _update(self):
         for i, (m, p) in enumerate(zip(self.masks, self.params)):
             # Generate random index and border
             with torch.no_grad():
@@ -42,34 +64,13 @@ class RandomPruning():
                         m[i][j] = torch.zeros_like(m[i][j])
         # Save random_index
         self.mask_index = random_index < border
+   
 
-    def zero(self):
-        for m, p in zip(self.masks, self.params):
-            p.data = m * p.data
-
-
-class MagnitudePruning():
+class MagnitudePruning(Pruning):
     def __init__(self, params, pruning_rate, exclude_biases=True):
-        # Set variables
-        self.pruning_rate = pruning_rate
-        # Initialize params
-        if exclude_biases:
-            self.params = [p for p in params if p.dim() > 1]
-        else:
-            self.params = [p for p in params]
-        # Initilaize masks
-        self.masks = []
-        for p in self.params:
-            self.masks.append(torch.ones_like(p))
+        super(MagnitudePruning, self).__init__()
 
-    def clone_params(self):
-        return [p.clone() for p in self.params]
-
-    def rewind(self, cloned_params):
-        for p_old, p_new in zip(self.params, cloned_params):
-            p_old.data = p_new.data
-
-    def update(self):
+    def _update(self):
         for i, (m, p) in enumerate(zip(self.masks, self.params)):
             # Get norm of each kernel
             with torch.no_grad():
@@ -83,7 +84,3 @@ class MagnitudePruning():
                     if norm_value[i][j] < border:
                         m[i][j] = torch.zeros_like(m[i][j])
         self.mask_index = norm_value < border
-
-    def zero(self):
-        for m, p in zip(self.masks, self.params):
-            p.data = m * p.data

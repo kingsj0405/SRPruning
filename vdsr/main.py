@@ -15,7 +15,7 @@ from dataset import SRDatasetFromDIV2K
 from model import VDSR
 from layer import DownSample2DMatlab, UpSample2DMatlab
 from util import psnr_set5
-from pruning import RandomPruning, MagnitudePruning
+from pruning import Pruning, RandomPruning, MagnitudePruning
 from visualization import _filter
 
 
@@ -69,9 +69,28 @@ def train():
         net.load_state_dict(checkpoint['net'])
         optimizer.load_state_dict(checkpoint['optimizer'])
         scheduler.load_state_dict(checkpoint['scheduler'])
+    elif config.TRAIN.rewinding:
+        print(f"[INFO] Load checkpoint from {config.TRAIN.load_rewinding_path}")
+        checkpoint = torch.load(config.TRAIN.load_rewinding_path)
+        start_epoch = checkpoint['epoch']
+        global_step = checkpoint['global_step']
+        net.load_state_dict(checkpoint['net'])
+        optimizer.load_state_dict(checkpoint['optimizer'])
+        scheduler.load_state_dict(checkpoint['scheduler'])
     else:
         start_epoch = 0
         global_step = 0
+    if config.TRAIN.pruning:
+        json_path = f"{config.SAVE.pruning_dir}/pruning-report.json"
+        print(f"[INFO] Load pruning report from {json_path}")
+        with open(json_path, 'r') as f:
+            pruning_report = json.load(f)
+            pruned_index = int(pruning_report['statistics']['argmax']) + 1
+        mask_index_path = f"{config.SAVE.pruning_dir}/mask_index_{pruned_index}.txt"
+        print(f"[INFO] Load mask index from {mask_index_path}")
+        mask_index = numpy.loadtxt(mask_index_path)
+        pruning = Pruning(net.parameters(), 0.1)
+        pruning.update(mask_index)
     criterion = torch.nn.MSELoss().cuda()
     print("[INFO] Start training loop")
     net.train()
@@ -94,6 +113,9 @@ def train():
             # Make low resolution input from high resolution image
             hr_image = hr_image.cuda()
             lr_image = DownSample2DMatlab(hr_image, 1 / 4, cuda=True)
+            # Zero masked value with pruning
+            if config.TRAIN.pruning:
+                pruning.zero()
             # Forward
             bicubic_image = UpSample2DMatlab(lr_image, 4, cuda=True)
             out = net(bicubic_image)
