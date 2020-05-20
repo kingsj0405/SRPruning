@@ -23,7 +23,7 @@ from visualization import _filter
 def train():
     print("[INFO] Set configuration")
     config = Config()
-    config.prepare_experiment()
+    config.prepare_training()
     # FIXME: After this issue resolved
     # https://github.com/makinacorpus/easydict/issues/20
     config = config.cfg
@@ -53,6 +53,7 @@ def train():
         shuffle=True)
     print("[INFO] Prepare net, optimizer, loss for training")
     net = VDSR().cuda()
+    # Use multiple gpus if possible
     if torch.cuda.device_count() > 1:
         print(
             f"[INFO] Use multiple gpus with count {torch.cuda.device_count()}")
@@ -61,6 +62,8 @@ def train():
         net.parameters(), lr=config.TRAIN.learning_rate)
     scheduler = torch.optim.lr_scheduler.StepLR(
         optimizer, config.TRAIN.lr_step_size)
+    criterion = torch.nn.MSELoss().cuda()
+    # Re-load from checkpoint, this can be rewinding
     if config.TRAIN.resume:
         print(
             f"[INFO] Load checkpoint from {config.TRAIN.load_checkpoint_path}")
@@ -70,18 +73,10 @@ def train():
         net.load_state_dict(checkpoint['net'])
         optimizer.load_state_dict(checkpoint['optimizer'])
         scheduler.load_state_dict(checkpoint['scheduler'])
-    elif config.TRAIN.rewinding:
-        print(
-            f"[INFO] Load checkpoint from {config.TRAIN.load_rewinding_path}")
-        checkpoint = torch.load(config.TRAIN.load_rewinding_path)
-        start_epoch = checkpoint['epoch']
-        global_step = checkpoint['global_step']
-        net.load_state_dict(checkpoint['net'])
-        optimizer.load_state_dict(checkpoint['optimizer'])
-        scheduler.load_state_dict(checkpoint['scheduler'])
     else:
         start_epoch = 0
         global_step = 0
+    # Set pruning mask
     if config.TRAIN.pruning:
         json_path = f"{config.SAVE.pruning_dir}/pruning-report.json"
         print(f"[INFO] Load pruning report from {json_path}")
@@ -94,14 +89,12 @@ def train():
             channel_mask = pickle.load(f)
         pruning = Pruning(net.parameters(), 0.1)
         pruning.update(channel_mask)
-    criterion = torch.nn.MSELoss().cuda()
     print("[INFO] Start training loop")
     net.train()
     writer = SummaryWriter(config.SAVE.summary_dir)
     log_timing = (len(train_set) // config.TRAIN.batch_size) / \
         config.TRAIN.period_log
     print("[INFO] Save checkpoint before training")
-    # Save checkpoint
     torch.save({
         'config': config,
         'epoch': 0,
@@ -166,6 +159,7 @@ def train():
 def pruning():
     print("[INFO] Set configuration")
     config = Config()
+    config.prepare_pruning()
     # FIXME: After this issue resolved
     # https://github.com/makinacorpus/easydict/issues/20
     config = config.cfg
@@ -173,11 +167,6 @@ def pruning():
     numpy.random.seed(config.TRAIN.seed)
     torch.manual_seed(config.TRAIN.seed)
     torch.cuda.manual_seed(config.TRAIN.seed)
-    print(f"[INFO] Prepare save directory for pruning")
-    dir_path = f"{config.EXP.path}/pruning/{config.PRUNE.exp_ver}"
-    if not Path(dir_path).exists():
-        Path(dir_path).mkdir(parents=True)
-    json_path = f"{dir_path}/pruning-report.json"
     print(
         f"[INFO] Load from checkpoint {config.PRUNE.trained_checkpoint_path}")
     checkpoint = torch.load(config.PRUNE.trained_checkpoint_path)
@@ -206,7 +195,7 @@ def pruning():
                             save_dir=config.SAVE.save_dir,
                             save=False)
         # Save results
-        with open(f"{dir_path}/channel_mask_{i}.pickle", 'wb') as f:
+        with open(f"{config.SAVE.pruning_dir}/channel_mask_{i}.pickle", 'wb') as f:
             pickle.dump(pruning.channel_mask, f)
         psnrs.append(psnr)
     result.psnrs = psnrs
@@ -219,6 +208,7 @@ def pruning():
     result.statistics.max = psnrs.max()
     result.statistics.mean = psnrs.mean()
     result.statistics.argmax = int(psnrs.argmax())
+    json_path = f"{config.SAVE.pruning_dir}/pruning-report.json"
     print(f"[INFO] Save masks and psnr value to {json_path}")
     with open(json_path, 'w') as f:
         json_txt = json.dumps(result, indent=4)
