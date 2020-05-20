@@ -60,8 +60,10 @@ def train():
         net = torch.nn.DataParallel(net)
     optimizer = torch.optim.Adam(
         net.parameters(), lr=config.TRAIN.learning_rate)
-    scheduler = torch.optim.lr_scheduler.StepLR(
-        optimizer, config.TRAIN.lr_step_size)
+    scheduler = torch.optim.lr_scheduler.MultiStepLR(
+        optimizer=optimizer,
+        milestones=config.TRAIN.lr_step_milestones,
+        gamma=config.TRAIN.lr_step_gamma)
     criterion = torch.nn.MSELoss().cuda()
     # Re-load from checkpoint, this can be rewinding
     if config.TRAIN.resume:
