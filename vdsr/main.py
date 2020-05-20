@@ -104,8 +104,8 @@ def train():
         'scheduler': scheduler.state_dict(),
     }, f"{config.SAVE.checkpoint_dir}/SRPruning_epoch_0.pth")
     for epoch in tqdm(range(start_epoch + 1,
-                            config.TRAIN.end_epoch + 1)):
-        for index, hr_image in enumerate(tqdm(train_dataloader)):
+                            config.TRAIN.end_epoch + 1), position=0, leave=True):
+        for index, hr_image in enumerate(tqdm(train_dataloader, position=1, leave=False)):
             # Make low resolution input from high resolution image
             hr_image = hr_image.cuda()
             lr_image = DownSample2DMatlab(hr_image, 1 / 4, cuda=True)
@@ -122,7 +122,7 @@ def train():
             optimizer.step()
             # Add count
             global_step += config.TRAIN.batch_size
-        if epoch % config.TRAIN.period_log == 0:
+        if epoch == 1 or epoch % config.TRAIN.period_log == 0:
             # Add images to tensorboard
             writer.add_images('1 hr', hr_image.clamp(0, 1))
             writer.add_images('2 out', out.clamp(0, 1))
