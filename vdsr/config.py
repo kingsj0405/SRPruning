@@ -14,7 +14,7 @@ class Config:
         self.cfg.EXP = EasyDict()
         self.cfg.EXP.path = '/app/NAS2_sejong/SRPruning/vdsr'
         self.cfg.EXP.version = 'v21'
-        self.cfg.EXP.description = "Training from scratch"
+        self.cfg.EXP.description = "Training from scratch to 10000, step 5000"
         # Options for save path
         self.cfg.SAVE = EasyDict()
         self.cfg.SAVE.cfg_dir = f"{self.cfg.EXP.path}/config/"
@@ -37,7 +37,7 @@ class Config:
         self.cfg.TRAIN.period_log = 5  # epoch
         self.cfg.TRAIN.period_save = 500  # epoch
         self.cfg.TRAIN.learning_rate = 1e-4
-        self.cfg.TRAIN.lr_step_size = 2000
+        self.cfg.TRAIN.lr_step_size = 5000
         self.cfg.TRAIN.lr_step_gamma = 0.1
         self.cfg.TRAIN.resume = False
         self.cfg.TRAIN.load_checkpoint_path = f"{self.cfg.EXP.path}/checkpoint/v??/SRPruning_epoch_??.pth"
