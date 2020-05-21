@@ -80,12 +80,12 @@ def train():
         global_step = 0
     # Set pruning mask
     if config.TRAIN.pruning:
-        json_path = f"{config.SAVE.pruning_dir}/pruning-report.json"
+        json_path = f"{config.TRAIN.pruning_dir}/pruning-report.json"
         print(f"[INFO] Load pruning report from {json_path}")
         with open(json_path, 'r') as f:
             pruning_report = json.load(f)
             pruned_index = int(pruning_report['statistics']['argmax']) + 1
-        channel_mask_path = f"{config.SAVE.pruning_dir}/channel_mask_{pruned_index}.pickle"
+        channel_mask_path = f"{config.TRAIN.pruning_dir}/channel_mask_{pruned_index}.pickle"
         print(f"[INFO] Load mask index from {channel_mask_path}")
         with open(channel_mask_path, 'rb') as f:
             channel_mask = pickle.load(f)
