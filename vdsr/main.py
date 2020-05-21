@@ -57,7 +57,7 @@ def train():
     if torch.cuda.device_count() > 1:
         print(
             f"[INFO] Use multiple gpus with count {torch.cuda.device_count()}")
-        net = torch.nn.DataParallel(net)
+    net = torch.nn.DataParallel(net)
     optimizer = torch.optim.Adam(
         net.parameters(), lr=config.TRAIN.learning_rate)
     scheduler = torch.optim.lr_scheduler.MultiStepLR(
@@ -94,8 +94,6 @@ def train():
     print("[INFO] Start training loop")
     net.train()
     writer = SummaryWriter(config.SAVE.summary_dir)
-    log_timing = (len(train_set) // config.TRAIN.batch_size) / \
-        config.TRAIN.period_log
     print("[INFO] Save checkpoint before training")
     torch.save({
         'config': config,
@@ -178,6 +176,7 @@ def pruning():
     for i in tqdm(range(1, config.PRUNE.random_prune_try_cnt + 1)):
         # Load net
         net = VDSR().cuda()
+        net = torch.nn.DataParallel(net)
         net.load_state_dict(checkpoint['net'])
         # Prune
         if config.PRUNE.method == 'RandomPruning':
@@ -217,7 +216,7 @@ def pruning():
         f.write(json_txt)
 
 
-def filter(checkpoint_path, save_dir, target_conv_index, filter_index):
+def visualize_filter(checkpoint_path, save_dir, target_conv_index, filter_index):
     """
     summary:
         visualize filter by get activation of random input
@@ -239,5 +238,5 @@ if __name__ == '__main__':
     fire.Fire({
         'train': train,
         'pruning': pruning,
-        'filter': filter
+        'visualize': visualize_filter
     })

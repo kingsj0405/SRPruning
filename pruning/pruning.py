@@ -97,8 +97,7 @@ class MagnitudePruning(Pruning):
             with torch.no_grad():
                 norm_value = p.pow(2).sum(-1).sum(-1).detach().cpu().numpy()
                 sorted_index = sorted(norm_value.flatten())
-                border = sorted_index[int(
-                    sorted_index.shape[0] * self.pruning_rate)]
+                border = sorted_index[int(len(sorted_index) * self.pruning_rate)]
             # Set new mask
             for i in range(p.size()[0]):
                 for j in range(p.size()[1]):

@@ -40,19 +40,19 @@ class Config:
         self.cfg.TRAIN.lr_step_milestones = [10000 * (x + 1) for x in range(int(10000 / 10000))]
         self.cfg.TRAIN.lr_step_gamma = 0.1
         self.cfg.TRAIN.resume = False
-        self.cfg.TRAIN.load_checkpoint_path = f"{self.cfg.EXP.path}/checkpoint/v??/SRPruning_epoch_??.pth"
+        self.cfg.TRAIN.load_checkpoint_path = f"{self.cfg.EXP.path}/checkpoint/v21/SRPruning_epoch_0.pth"
         self.cfg.TRAIN.pruning = False
         self.cfg.TRAIN.pruning_version = 'p??'
         ############################################
         # Pruning
         ############################################
         self.cfg.PRUNE = EasyDict()
-        self.cfg.PRUNE.description = "Random Pruning, pruning rate 0.5"
-        self.cfg.PRUNE.exp_ver = 'p21'
-        self.cfg.PRUNE.trained_checkpoint_path = f"{self.cfg.EXP.path}/checkpoint/v??/SRPruning_epoch_??.pth"
-        self.cfg.PRUNE.method = 'RandomPruning'  # 'RandomPruning', 'MagnitudePruning'
-        self.cfg.PRUNE.pruning_rate = 0.5
-        self.cfg.PRUNE.random_prune_try_cnt = 128
+        self.cfg.PRUNE.description = "MagnitudePruning, pruning rate 0.9"
+        self.cfg.PRUNE.exp_ver = 'p30'
+        self.cfg.PRUNE.trained_checkpoint_path = f"{self.cfg.EXP.path}/checkpoint/v21/SRPruning_epoch_4500.pth"
+        self.cfg.PRUNE.method = 'MagnitudePruning'  # 'RandomPruning', 'MagnitudePruning'
+        self.cfg.PRUNE.pruning_rate = 0.9
+        self.cfg.PRUNE.random_prune_try_cnt = 1
         self.cfg.SAVE.pruning_dir = f"{self.cfg.EXP.path}/pruning/{self.cfg.PRUNE.exp_ver}"
 
     def prepare_training(self):
