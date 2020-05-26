@@ -48,12 +48,12 @@ class Config:
         # Pruning
         ############################################
         self.cfg.PRUNE = EasyDict()
-        self.cfg.PRUNE.description = "RandomPruning, pruning rate 0.8"
-        self.cfg.PRUNE.exp_ver = 'p40'
-        self.cfg.PRUNE.trained_checkpoint_path = f"{self.cfg.EXP.path}/checkpoint/v21/SRPruning_epoch_4500.pth"
-        self.cfg.PRUNE.method = 'RandomPruning'  # 'RandomPruning', 'MagnitudePruning'
-        self.cfg.PRUNE.pruning_rate = 0.8
-        self.cfg.PRUNE.random_prune_try_cnt = 128
+        self.cfg.PRUNE.description = "RandomPruning, pruning rate 0.1, Try cnt 100000"
+        self.cfg.PRUNE.exp_ver = 'p41'
+        self.cfg.PRUNE.trained_checkpoint_path = f"{self.cfg.EXP.path}/checkpoint/v21/SRPruning_epoch_10000.pth"
+        self.cfg.PRUNE.method = 'RandomPruning'  # 'RandomPruning', 'MagnitudePruning', 'EveryCombPruning'
+        self.cfg.PRUNE.pruning_rate = 0.1
+        self.cfg.PRUNE.random_prune_try_cnt = 1e+6
         self.cfg.SAVE.pruning_dir = f"{self.cfg.EXP.path}/pruning/{self.cfg.PRUNE.exp_ver}"
 
     def prepare_training(self):
