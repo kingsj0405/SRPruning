@@ -16,7 +16,7 @@ from dataset import SRDatasetFromDIV2K
 from model import VDSR
 from layer import DownSample2DMatlab, UpSample2DMatlab
 from util import psnr_set5
-from pruning import Pruning, RandomPruning, MagnitudePruning
+from pruning import Pruning, RandomPruning, MagnitudePruning, ActivationPreservingPruning
 from visualization import _filter
 
 
@@ -184,6 +184,9 @@ def pruning():
                 net.parameters(), config.PRUNE.pruning_rate)
         elif config.PRUNE.method == 'MagnitudePruning':
             pruning = MagnitudePruning(
+                net.parameters(), config.PRUNE.pruning_rate)
+        elif config.PRUNE.method == 'ActivationPreservingPruning':
+            pruning = ActivationPreservingPruning(
                 net.parameters(), config.PRUNE.pruning_rate)
         else:
             raise Exception(

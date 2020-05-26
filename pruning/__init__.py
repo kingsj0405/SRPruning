@@ -1,1 +1,1 @@
-from pruning.pruning import Pruning, RandomPruning, MagnitudePruning
+from pruning.pruning import Pruning, RandomPruning, MagnitudePruning, ActivationPreservingPruning
