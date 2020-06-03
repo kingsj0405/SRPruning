@@ -48,10 +48,10 @@ class Config:
         # Pruning
         ############################################
         self.cfg.PRUNE = EasyDict()
-        self.cfg.PRUNE.description = "ActivationPreservingPruning, pruning rate 0.1"
-        self.cfg.PRUNE.exp_ver = 'p44'
-        self.cfg.PRUNE.trained_checkpoint_path = f"{self.cfg.EXP.path}/checkpoint/v21/SRPruning_epoch_10000.pth"
-        self.cfg.PRUNE.method = 'ActivationPreservingPruning'  # 'RandomPruning', 'MagnitudePruning', 'ActivationPreservingPruning'
+        self.cfg.PRUNE.description = "MagnitudeFilterPruning, pruning rate 0.1"
+        self.cfg.PRUNE.exp_ver = 'p45'
+        self.cfg.PRUNE.trained_checkpoint_path = f"{self.cfg.EXP.path}/checkpoint/v22/SRPruning_epoch_10000.pth"
+        self.cfg.PRUNE.method = 'MagnitudeFilterPruning'  # 'RandomPruning', 'MagnitudePruning', 'ActivationPreservingPruning', 'MagnitudeFilterPruning'
         self.cfg.PRUNE.pruning_rate = 0.1
         self.cfg.PRUNE.random_prune_try_cnt = 1
         self.cfg.SAVE.pruning_dir = f"{self.cfg.EXP.path}/pruning/{self.cfg.PRUNE.exp_ver}"

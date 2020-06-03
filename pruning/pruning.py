@@ -107,3 +107,28 @@ class MagnitudePruning(Pruning):
             # Append channel_mask
             self.channel_mask.append(norm_value < border)
 
+
+class MagnitudeFilterPruning(Pruning):
+    def __init__(self, params, pruning_rate, exclude_biases=True):
+        super(
+            MagnitudeFilterPruning,
+            self).__init__(
+            params,
+            pruning_rate,
+            exclude_biases)
+
+    def _update(self):
+        # Initialize channel_mask
+        self.channel_mask = []
+        for i, (m, p) in enumerate(zip(self.masks, self.params)):
+            # Get norm of each kernel
+            with torch.no_grad():
+                norm_value = p.pow(2).sum(-1).sum(-1).sum(-1).detach().cpu().numpy()
+                sorted_index = sorted(norm_value)
+                border = sorted_index[int(len(sorted_index) * self.pruning_rate)]
+            # Set new mask
+            for i in range(p.size()[0]):
+                if norm_value[i] < border:
+                    m[i] = torch.zeros_like(m[i])
+            # Append channel_mask
+            self.channel_mask.append(norm_value < border)
