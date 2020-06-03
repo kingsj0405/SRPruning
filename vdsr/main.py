@@ -89,7 +89,8 @@ def train():
         print(f"[INFO] Load mask index from {channel_mask_path}")
         with open(channel_mask_path, 'rb') as f:
             channel_mask = pickle.load(f)
-        pruning = Pruning(net.parameters(), 0.1)
+        pruning_rate = pruning_report['meta']['config']['pruning_rate']
+        pruning = Pruning(net.parameters(), pruning_rate)
         pruning.update(channel_mask)
     print("[INFO] Start training loop")
     net.train()

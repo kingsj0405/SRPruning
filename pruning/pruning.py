@@ -27,21 +27,12 @@ class Pruning:
 
     def update(self, channel_mask=None):
         if channel_mask is not None:  # Load channel_mask from other
-            self.channel_mask = channel_mask
-            for layer_index, mask in enumerate(self.channel_mask):
-                m = self.masks[layer_index]
-                for i in range(mask.shape[0]):
-                    for j in range(mask.shape[1]):
-                        if mask[i][j] == 1:
-                            m[i][j] = torch.zeros_like(m[i][j])
-                        elif mask[i][j] == 0:
-                            m[i][j] = torch.ones_like(m[i][j])
-                        else:
-                            m[i][j] = m[i][j].new_full(m[i][j].shape, mask[i][j])
-                            raise Exception(
-                                f"mask should be 0 or 1, cur val is: {mask[i][j]}")
+            self._load(channel_mask)
         else:
             self._update()
+
+    def _load(self, channel_mask):
+        raise NotImplementedError
 
     def _update(self):
         raise NotImplementedError
@@ -59,6 +50,22 @@ class RandomPruning(Pruning):
             params,
             pruning_rate,
             exclude_biases)
+    
+    def _load(self, channel_mask):
+        # Set channel_mask
+        self.channel_mask = channel_mask
+        for layer_index, mask in enumerate(self.channel_mask):
+            m = self.masks[layer_index]
+            for i in range(mask.shape[0]):
+                for j in range(mask.shape[1]):
+                    if mask[i][j] == 1:
+                        m[i][j] = torch.zeros_like(m[i][j])
+                    elif mask[i][j] == 0:
+                        m[i][j] = torch.ones_like(m[i][j])
+                    else:
+                        m[i][j] = m[i][j].new_full(m[i][j].shape, mask[i][j])
+                        raise Exception(
+                            f"mask should be 0 or 1, cur val is: {mask[i][j]}")
 
     def _update(self):
         # Initialize channel_mask
@@ -89,6 +96,22 @@ class MagnitudePruning(Pruning):
             params,
             pruning_rate,
             exclude_biases)
+    
+    def _load(self, channel_mask):
+        # Set channel_mask
+        self.channel_mask = channel_mask
+        for layer_index, mask in enumerate(self.channel_mask):
+            m = self.masks[layer_index]
+            for i in range(mask.shape[0]):
+                for j in range(mask.shape[1]):
+                    if mask[i][j] == 1:
+                        m[i][j] = torch.zeros_like(m[i][j])
+                    elif mask[i][j] == 0:
+                        m[i][j] = torch.ones_like(m[i][j])
+                    else:
+                        m[i][j] = m[i][j].new_full(m[i][j].shape, mask[i][j])
+                        raise Exception(
+                            f"mask should be 0 or 1, cur val is: {mask[i][j]}")
 
     def _update(self):
         # Initialize channel_mask
@@ -116,6 +139,22 @@ class MagnitudeFilterPruning(Pruning):
             params,
             pruning_rate,
             exclude_biases)
+
+    def _load(self, channel_mask):
+        # Set channel_mask
+        self.channel_mask = channel_mask
+        for layer_index, mask in enumerate(self.channel_mask):
+            m = self.masks[layer_index]
+            for i in range(mask.shape[0]):
+                for j in range(mask.shape[1]):
+                    if mask[i] == 1:
+                        m[i] = torch.zeros_like(m[i])
+                    elif mask[i] == 0:
+                        m[i] = torch.ones_like(m[i])
+                    else:
+                        m[i] = m[i].new_full(m[i].shape, mask[i])
+                        raise Exception(
+                            f"mask should be 0 or 1, cur val is: {mask[i]}"
 
     def _update(self):
         # Initialize channel_mask
