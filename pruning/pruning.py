@@ -154,7 +154,7 @@ class MagnitudeFilterPruning(Pruning):
                     else:
                         m[i] = m[i].new_full(m[i].shape, mask[i])
                         raise Exception(
-                            f"mask should be 0 or 1, cur val is: {mask[i]}"
+                            f"mask should be 0 or 1, cur val is: {mask[i]}")
 
     def _update(self):
         # Initialize channel_mask

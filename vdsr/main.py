@@ -16,7 +16,7 @@ from dataset import SRDatasetFromDIV2K
 from model import VDSR
 from layer import DownSample2DMatlab, UpSample2DMatlab
 from util import psnr_set5
-from pruning import Pruning, RandomPruning, MagnitudePruning, MagnitudeFilterPruning
+from pruning import pruning_map, Pruning, RandomPruning, MagnitudePruning, MagnitudeFilterPruning
 from visualization import _filter
 
 
@@ -89,9 +89,15 @@ def train():
         print(f"[INFO] Load mask index from {channel_mask_path}")
         with open(channel_mask_path, 'rb') as f:
             channel_mask = pickle.load(f)
+        pruning_method = pruning_report['meta']['config']['method']
         pruning_rate = pruning_report['meta']['config']['pruning_rate']
-        pruning = Pruning(net.parameters(), pruning_rate)
-        pruning.update(channel_mask)
+        if pruning_method in pruning_map.keys():
+            pruning_method = pruning_map[pruning_method]
+            pruning = pruning_method(net.parameters(), pruning_rate)
+            pruning.update(channel_mask)
+        else:
+            raise Exception(
+                f"Not proper config.PRUNE.method, cur var is: {config.PRUNE.method}")
     print("[INFO] Start training loop")
     net.train()
     writer = SummaryWriter(config.SAVE.summary_dir)
@@ -180,14 +186,9 @@ def pruning():
         net = torch.nn.DataParallel(net)
         net.load_state_dict(checkpoint['net'])
         # Prune
-        if config.PRUNE.method == 'RandomPruning':
-            pruning = RandomPruning(
-                net.parameters(), config.PRUNE.pruning_rate)
-        elif config.PRUNE.method == 'MagnitudePruning':
-            pruning = MagnitudePruning(
-                net.parameters(), config.PRUNE.pruning_rate)
-        elif config.PRUNE.method == 'MagnitudeFilterPruning':
-            pruning = MagnitudeFilterPruning(
+        if config.PRUNE.method in pruning_map.keys():
+            pruning_method = pruning_map[config.PRUNE.method]
+            pruning = pruning_method(
                 net.parameters(), config.PRUNE.pruning_rate)
         else:
             raise Exception(

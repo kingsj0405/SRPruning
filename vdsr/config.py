@@ -13,8 +13,8 @@ class Config:
         self.cfg = EasyDict()
         self.cfg.EXP = EasyDict()
         self.cfg.EXP.path = '/app/NAS2_sejong/SRPruning/vdsr'
-        self.cfg.EXP.version = 'v39'
-        self.cfg.EXP.description = "Rewinding Magnitude pruning 0.6"
+        self.cfg.EXP.version = 'v40'
+        self.cfg.EXP.description = "Test rewinding"
         # Options for save path
         self.cfg.SAVE = EasyDict()
         self.cfg.SAVE.cfg_dir = f"{self.cfg.EXP.path}/config/"
@@ -42,14 +42,14 @@ class Config:
         self.cfg.TRAIN.resume = True
         self.cfg.TRAIN.load_checkpoint_path = f"{self.cfg.EXP.path}/checkpoint/v21/SRPruning_epoch_0.pth"
         self.cfg.TRAIN.pruning = True
-        self.cfg.TRAIN.pruning_version = 'p33'
+        self.cfg.TRAIN.pruning_version = 'p40'
         self.cfg.TRAIN.pruning_dir = f"{self.cfg.EXP.path}/pruning/{self.cfg.TRAIN.pruning_version}"
         ############################################
         # Pruning
         ############################################
         self.cfg.PRUNE = EasyDict()
-        self.cfg.PRUNE.description = "MagnitudeFilterPruning, pruning rate 0.1"
-        self.cfg.PRUNE.exp_ver = 'p45'
+        self.cfg.PRUNE.description = "Test pruning_map"
+        self.cfg.PRUNE.exp_ver = 'p46'
         self.cfg.PRUNE.trained_checkpoint_path = f"{self.cfg.EXP.path}/checkpoint/v22/SRPruning_epoch_10000.pth"
         self.cfg.PRUNE.method = 'MagnitudeFilterPruning'  # 'RandomPruning', 'MagnitudePruning', 'ActivationPreservingPruning', 'MagnitudeFilterPruning'
         self.cfg.PRUNE.pruning_rate = 0.1
