@@ -171,3 +171,40 @@ class MagnitudeFilterPruning(Pruning):
                     m[i] = torch.zeros_like(m[i])
             # Append channel_mask
             self.channel_mask.append(norm_value < border)
+
+
+class AttentionPruning(Pruning):
+    class AttentionPruningNetwork(nn.Module):
+        def __init__(self):
+            raise NotImplementedError
+            super(AttentionPruning.AttentionPruningNetwork, self).__init__()
+            self.transformer = nn.Transformer([64 * 20])
+        
+        def forward(self, x):
+            out = nn.utils.spectral_norm(self.transformer(x))
+            return out
+
+
+    def __init__(self, params, pruning_rate, exclude_biases=True):
+        super(AttentionPruning, self).__init__(
+            params,
+            pruning_rate,
+            exclude_biases)
+        self.net = self.AttentionPruningNetwork()
+
+    def _load(self, channel_mask):
+        # Set channel_mask
+        self.channel_mask = importance_rate 
+        for layer_index, mask in enumerate(self.channel_mask):
+            m = self.masks[layer_index]
+            for i in range(mask.shape[0]):
+                for j in range(mask.shape[1]):
+                    if mask[i] == 1:
+                        m[i] = torch.zeros_like(m[i])
+                    elif mask[i] == 0:
+                        m[i] = torch.ones_like(m[i])
+                    else:
+                        m[i] = m[i].new_full(m[i].shape, mask[i])
+
+    def _update(self):
+        raise NotImplementedError

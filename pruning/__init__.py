@@ -1,7 +1,8 @@
-from pruning.pruning import Pruning, RandomPruning, MagnitudePruning, MagnitudeFilterPruning
+from pruning.pruning import Pruning, RandomPruning, MagnitudePruning, MagnitudeFilterPruning, AttentionPruning
 
 pruning_map = {
     'RandomPruning': RandomPruning,
     'MagnitudePruning': MagnitudePruning,
-    'MagnitudeFilterPruning': MagnitudeFilterPruning
+    'MagnitudeFilterPruning': MagnitudeFilterPruning,
+    'AttentionPruning': AttentionPruning
 }

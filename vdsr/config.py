@@ -7,14 +7,15 @@ class Config:
     def __init__(self):
         # NOTE: Edit this configutation if you want
         ############################################
-        # Training
+        # General
         ############################################
         # Options about experiment
         self.cfg = EasyDict()
         self.cfg.EXP = EasyDict()
         self.cfg.EXP.path = '/app/NAS2_sejong/SRPruning/vdsr'
-        self.cfg.EXP.version = 'v40'
+        self.cfg.EXP.version = 'tp1'
         self.cfg.EXP.description = "Test rewinding"
+        self.cfg.EXP.seed = 903
         # Options for save path
         self.cfg.SAVE = EasyDict()
         self.cfg.SAVE.cfg_dir = f"{self.cfg.EXP.path}/config/"
@@ -28,9 +29,11 @@ class Config:
         self.cfg.DATA.set5_dir = '../../dataset/Set5/'
         self.cfg.DATA.hr_size = 128
         self.cfg.DATA.lr_size = 32
+        ############################################
+        # Training
+        ############################################
         # Options for training
         self.cfg.TRAIN = EasyDict()
-        self.cfg.TRAIN.seed = 903
         self.cfg.TRAIN.batch_size = 64
         self.cfg.TRAIN.dataloader_num_worker = 16
         self.cfg.TRAIN.end_epoch = 10000
@@ -55,6 +58,11 @@ class Config:
         self.cfg.PRUNE.pruning_rate = 0.1
         self.cfg.PRUNE.random_prune_try_cnt = 1
         self.cfg.SAVE.pruning_dir = f"{self.cfg.EXP.path}/pruning/{self.cfg.PRUNE.exp_ver}"
+        ############################################
+        # Train pruning model
+        ############################################
+        self.cfg.TRAIN_PRUNE = EasyDict()
+        self.cfg.TRAIN_PRUNE.model_parameters = f"{self.cfg.EXP.path}/checkpoint/v22/SRPruning_epoch_10000.pth"
 
     def prepare_training(self):
         if Path(self.cfg.SAVE.cfg_file_path).exists():
