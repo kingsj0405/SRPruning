@@ -13,8 +13,8 @@ class Config:
         self.cfg = EasyDict()
         self.cfg.EXP = EasyDict()
         self.cfg.EXP.path = '/app/NAS2_sejong/SRPruning/vdsr'
-        self.cfg.EXP.version = 'tp1'
-        self.cfg.EXP.description = "Test rewinding"
+        self.cfg.EXP.version = 'v40'
+        self.cfg.EXP.description = "Random Init Random Pruning 0.9"
         self.cfg.EXP.seed = 903
         # Options for save path
         self.cfg.SAVE = EasyDict()
@@ -42,10 +42,10 @@ class Config:
         self.cfg.TRAIN.learning_rate = 1e-4
         self.cfg.TRAIN.lr_step_milestones = [10000 * (x + 1) for x in range(int(10000 / 10000))]
         self.cfg.TRAIN.lr_step_gamma = 0.1
-        self.cfg.TRAIN.resume = True
-        self.cfg.TRAIN.load_checkpoint_path = f"{self.cfg.EXP.path}/checkpoint/v21/SRPruning_epoch_0.pth"
-        self.cfg.TRAIN.pruning = True
-        self.cfg.TRAIN.pruning_version = 'p40'
+        self.cfg.TRAIN.resume = False
+        self.cfg.TRAIN.load_checkpoint_path = f"{self.cfg.EXP.path}/checkpoint/v22/SRPruning_epoch_0.pth"
+        self.cfg.TRAIN.pruning = True 
+        self.cfg.TRAIN.pruning_version = 'p29'
         self.cfg.TRAIN.pruning_dir = f"{self.cfg.EXP.path}/pruning/{self.cfg.TRAIN.pruning_version}"
         ############################################
         # Pruning
