@@ -11,13 +11,11 @@ from torchvision import transforms
 from torchvision.utils import save_image
 from tqdm import tqdm
 
-from model import VDSR
+from model import VDSR, DownSample2DMatlab, UpSample2DMatlab
 from pruning import pruning_map
-from visualization import _filter
 from src.config import TrainingConfig, PruningConfig
 from src.dataset import SRDatasetFromDIV2K
 from src.loss import get_loss
-from src.layer import DownSample2DMatlab, UpSample2DMatlab
 from src.util import psnr_set5
 
 
@@ -222,135 +220,13 @@ def pruning():
         f.write(json_txt)
 
 
-def train_pruning_net():
-    if torch.cuda.device_count() > 1:
-        print(f"[INFO] Use multiple gpus with count {torch.cuda.device_count()}")
-    print("[INFO] Set configuration")
-    config = Config()
-    config.prepare_training()
-    # FIXME: After this issue resolved
-    # https://github.com/makinacorpus/easydict/issues/20
-    config = config.cfg
-    print("[INFO] Set random seed")
-    numpy.random.seed(config.EXP.seed)
-    torch.manual_seed(config.EXP.seed)
-    torch.cuda.manual_seed(config.EXP.seed)
-    print("[INFO] Load dataset for activation")
-    train_set = SRDatasetFromDIV2K(dir_path=config.DATA.div2k_dir,
-                                   transform=transforms.Compose([
-                                       transforms.RandomCrop(
-                                           [config.DATA.hr_size, config.DATA.hr_size]),
-                                       transforms.RandomHorizontalFlip(),
-                                       transforms.RandomVerticalFlip(),
-                                       transforms.ToTensor()]),
-                                   transform_lr=transforms.Compose([
-                                       transforms.RandomCrop([config.DATA.lr_size, config.DATA.lr_size]),
-                                       transforms.RandomHorizontalFlip(),
-                                       transforms.RandomVerticalFlip(),
-                                       transforms.ToTensor()
-                                   ]),
-                                   mode='valid')
-    train_dataloader = torch.utils.data.DataLoader(
-        dataset=train_set,
-        num_workers=4,
-        batch_size=config.TRAIN.batch_size,
-        shuffle=True)
-    print("[INFO] Prepare net, optimizer, loss for training")
-    net = VDSR().cuda()
-    net = torch.nn.DataParallel(net)
-    pruning = AttentionPruning(net.parameters(), None)
-    pruning.net = pruning.net.cuda()
-    pruning.net = torch.nn.DataParallel(pruning.net)
-    optimizer = torch.optim.Adam(
-        pruning.net.parameters(), lr=config.TRAIN.learning_rate)
-    scheduler = torch.optim.lr_scheduler.MultiStepLR(
-        optimizer=optimizer,
-        milestones=config.TRAIN.lr_step_milestones,
-        gamma=config.TRAIN.lr_step_gamma)
-    criterion = torch.nn.MSELoss().cuda()
-    print(f"[INFO] Load checkpoint from {config.TRAIN_PRUNE.model_parameters}")
-    checkpoint = torch.load(config.PRUNE.trained_checkpoint_path)
-    net.load_state_dict(checkpoint['net'])
-    print("[INFO] Start training")
-    net.eval()
-    pruning.net.train()
-    writer = SummaryWriter(config.SAVE.summary_dir)
-    start_epoch = 0
-    global_step = 0
-    print("[INFO] Save checkpoint before training")
-    torch.save({
-        'config': config,
-        'epoch': 0,
-        'global_step': global_step,
-        'net': net.state_dict(),
-        'pruning.net': pruning.net.state_dict(),
-        'optimizer': optimizer.state_dict(),
-        'scheduler': scheduler.state_dict(),
-    }, f"{config.SAVE.checkpoint_dir}/SRPruning_epoch_0.pth")
-    for epoch in tqdm(range(start_epoch + 1,
-                            config.TRAIN.end_epoch + 1), position=0, leave=True):
-        for index, image in enumerate(tqdm(train_dataloader, position=1, leave=False)):
-            # input and model parameters(from pruning)
-            image = image.cuda()
-            image = DownSample2DMatlab(image, 1 / 4, cuda=True)
-            # forward through pruning.net
-            w_0 = pruning.clone_params()
-            pruning.update(image)
-            # get pruned activation
-            with torch.no_grad():
-                pruning.zero()
-                output = net(image)
-            # get original activation
-            with torch.no_grad():
-                pruning.rewind(w_0)
-                origin = net(image)
-            # Get reconstruction loss
-            loss = criterion(origin, output)
-            # Back-propagation
-            optimizer.zero_grad()
-            loss.backward()
-            optimizer.step()
-            # Add count
-            global_step += config.TRAIN.batch_size
-        if epoch % config.TRAIN.period_log == 0:
-            writer.add_scalar(
-                '1 MSE', loss.item(), global_step=global_step
-            )
-        if epoch % config.TRAIN.period_save == 0:
-            # Save checkpoint
-            torch.save({
-                'config': config,
-                'epoch': epoch,
-                'global_step': global_step,
-                'net': net.state_dict(),
-                'optimizer': optimizer.state_dict(),
-                'scheduler': scheduler.state_dict(),
-            }, f"{config.SAVE.checkpoint_dir}/SRPruning_epoch_{epoch}.pth")
-        scheduler.step()
-
-
-def visualize_filter(checkpoint_path, save_dir, target_conv_index, filter_index):
-    """
-    summary:
-        visualize filter by get activation of random input
-
-    parameters:
-        checkpoint_path: path to checkpoint
-        save_dir: path to save visualization
-        target_conv_index: conv index, start from 1
-        filter_index: filter index, start from 1
-    """
-    print(f"[INFO] Load checkpoitn from {checkpoint_path}")
-    checkpoint = torch.load(checkpoint_path)
-    net = VDSR()
-    net.load_state_dict(checkpoint['net'])
-    _filter(net, save_dir, target_conv_index, filter_index)
+def hello():
+    print("Hello, World!")
 
 
 if __name__ == '__main__':
     fire.Fire({
         'train': train,
         'pruning': pruning,
-        'train_pruning_net': train_pruning_net,
-        'visualize': visualize_filter
+        'hello': hello
     })
