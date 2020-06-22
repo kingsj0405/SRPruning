@@ -12,26 +12,36 @@ class Config:
         # Options about experiment
         self.cfg = EasyDict()
         self.cfg.EXP = EasyDict()
-        self.cfg.EXP.path = '/app/NAS2_sejong/SRPruning/vdsr'
-        self.cfg.EXP.version = 'v43'
-        self.cfg.EXP.description = "Rewinding L2NormPruning 0.8 with PatchMSELoss"
+        self.cfg.EXP.path = None        # Set on child class
+        self.cfg.EXP.version = None     # Set on child class
+        self.cfg.EXP.description = None # Set on child class
         self.cfg.EXP.seed = 903
-        # Options for save path
+       
+    def _make_directory(self, path):
+        print(f"[INFO] Make directory {path}")
+        if not Path(path).exists():
+            Path(path).mkdir(parents=True)
+
+    def _save_config_file(self, path):
+        print(f"[INFO] Save config to {path}")
+        with open(path, 'w') as f:
+            f.write(json.dumps(self.cfg, indent=4))
+
+
+class TrainingConfig(Config):
+    def __init__(self):
+        super(TrainingConfig, self).__init__()
+        # Experiment settings
+        self.cfg.EXP.path = '/app/NAS2_sejong/SRPruning/vdsr'
+        self.cfg.EXP.version = 'v44'
+        self.cfg.EXP.description = "Test TrainingConfig"
+        # Save Settings
         self.cfg.SAVE = EasyDict()
         self.cfg.SAVE.cfg_dir = f"{self.cfg.EXP.path}/config/"
         self.cfg.SAVE.cfg_file_path = f"{self.cfg.EXP.path}/config/{self.cfg.EXP.version}.cfg"
         self.cfg.SAVE.save_dir = f"{self.cfg.EXP.path}/samples/{self.cfg.EXP.version}"
         self.cfg.SAVE.checkpoint_dir = f"{self.cfg.EXP.path}/checkpoint/{self.cfg.EXP.version}"
         self.cfg.SAVE.summary_dir = f"{self.cfg.EXP.path}/summary/{self.cfg.EXP.version}"
-        # Options for dataset
-        self.cfg.DATA = EasyDict()
-        self.cfg.DATA.div2k_dir = '../../dataset/DIV2K/'
-        self.cfg.DATA.set5_dir = '../../dataset/Set5/'
-        self.cfg.DATA.hr_size = 128
-        self.cfg.DATA.lr_size = 32
-        ############################################
-        # Training
-        ############################################
         # Options for training
         self.cfg.TRAIN = EasyDict()
         self.cfg.TRAIN.batch_size = 64
@@ -48,24 +58,17 @@ class Config:
         self.cfg.TRAIN.pruning = True 
         self.cfg.TRAIN.pruning_version = 'p34'
         self.cfg.TRAIN.pruning_dir = f"{self.cfg.EXP.path}/pruning/{self.cfg.TRAIN.pruning_version}"
-        ############################################
-        # Pruning
-        ############################################
-        self.cfg.PRUNE = EasyDict()
-        self.cfg.PRUNE.description = "Test pruning_map"
-        self.cfg.PRUNE.exp_ver = 'p46'
-        self.cfg.PRUNE.trained_checkpoint_path = f"{self.cfg.EXP.path}/checkpoint/v22/SRPruning_epoch_10000.pth"
-        self.cfg.PRUNE.method = 'MagnitudeFilterPruning'  # 'RandomPruning', 'MagnitudePruning', 'ActivationPreservingPruning', 'MagnitudeFilterPruning'
-        self.cfg.PRUNE.pruning_rate = 0.1
-        self.cfg.PRUNE.random_prune_try_cnt = 1
-        self.cfg.SAVE.pruning_dir = f"{self.cfg.EXP.path}/pruning/{self.cfg.PRUNE.exp_ver}"
-        ############################################
-        # Train pruning model
-        ############################################
+        # Options for dataset
+        self.cfg.DATA = EasyDict()
+        self.cfg.DATA.div2k_dir = '../dataset/DIV2K/'
+        self.cfg.DATA.set5_dir = '../dataset/Set5/'
+        self.cfg.DATA.hr_size = 128
+        self.cfg.DATA.lr_size = 32
+        # Rewinding or FineTuning
         self.cfg.TRAIN_PRUNE = EasyDict()
         self.cfg.TRAIN_PRUNE.model_parameters = f"{self.cfg.EXP.path}/checkpoint/v22/SRPruning_epoch_10000.pth"
 
-    def prepare_training(self):
+    def prepare(self):
         if Path(self.cfg.SAVE.cfg_file_path).exists():
             print(
                 f"[ERROR] Configuration {self.cfg.SAVE.cfg_file_path} already exists")
@@ -78,23 +81,34 @@ class Config:
             self._make_directory(self.cfg.SAVE.summary_dir)
             self._save_config_file(self.cfg.SAVE.cfg_file_path)
             print(f"[INFO] Experiment {self.cfg.EXP.version} set up")
+
+
+class PruningConfig(Config):
+    def __init__(self):
+        super(PruningConfig, self).__init__()
+        # General Setting
+        self.cfg.EXP.path = '/app/NAS2_sejong/SRPruning/vdsr'
+        self.cfg.EXP.description = "Test pruning_map"
+        self.cfg.EXP.exp_ver = 'p46'
+        # Save Setting
+        self.cfg.SAVE = EasyDict()
+        self.cfg.SAVE.cfg_dir = f"{self.cfg.EXP.path}/config/"
+        self.cfg.SAVE.cfg_file_path = f"{self.cfg.EXP.path}/config/{self.cfg.EXP.version}.cfg"
+        self.cfg.SAVE.pruning_dir = f"{self.cfg.EXP.path}/pruning/{self.cfg.PRUNE.exp_ver}"
+        # Pruning Setting
+        self.cfg.PRUNE = EasyDict()
+        self.cfg.PRUNE.trained_checkpoint_path = f"{self.cfg.EXP.path}/checkpoint/v22/SRPruning_epoch_10000.pth"
+        self.cfg.PRUNE.method = 'MagnitudeFilterPruning'  # 'RandomPruning', 'MagnitudePruning', 'ActivationPreservingPruning', 'MagnitudeFilterPruning'
+        self.cfg.PRUNE.pruning_rate = 0.1
+        self.cfg.PRUNE.random_prune_try_cnt = 1
     
-    def prepare_pruning(self):
-        if Path(self.cfg.SAVE.pruning_dir).exists():
+    def prepare(self):
+        if Path(self.cfg.SAVE.cfg_file_path).exists():
             print(
                 f"[ERROR] Pruning directory {self.cfg.SAVE.pruning_dir} already exists")
-            print(f"[ERROR] Stop pruning {self.cfg.PRUNE.exp_ver}")
+            print(f"[ERROR] Stop pruning {self.cfg.EXP.exp_ver}")
             exit(-1)
         else:
             self._make_directory(self.cfg.SAVE.pruning_dir)
-            print(f"[INFO] Experiment {self.cfg.PRUNE.exp_ver} set up")
-
-    def _make_directory(self, path):
-        print(f"[INFO] Make directory {path}")
-        if not Path(path).exists():
-            Path(path).mkdir(parents=True)
-
-    def _save_config_file(self, path):
-        print(f"[INFO] Save config to {path}")
-        with open(path, 'w') as f:
-            f.write(json.dumps(self.cfg, indent=4))
+            self._save_config_file(self.cfg.SAVE.cfg_file_path)
+            print(f"[INFO] Experiment {self.cfg.EXP.exp_ver} set up")

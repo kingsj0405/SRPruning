@@ -11,20 +11,20 @@ from torchvision import transforms
 from torchvision.utils import save_image
 from tqdm import tqdm
 
-from config import Config
-from dataset import SRDatasetFromDIV2K
 from model import VDSR
-from loss import get_loss
-from layer import DownSample2DMatlab, UpSample2DMatlab
-from util import psnr_set5
-from pruning import pruning_map, Pruning, RandomPruning, MagnitudePruning, MagnitudeFilterPruning, AttentionPruning
+from pruning import pruning_map
 from visualization import _filter
+from src.config import TrainingConfig, PruningConfig
+from src.dataset import SRDatasetFromDIV2K
+from src.loss import get_loss
+from src.layer import DownSample2DMatlab, UpSample2DMatlab
+from src.util import psnr_set5
 
 
 def train():
     print("[INFO] Set configuration")
-    config = Config()
-    config.prepare_training()
+    config = TrainingConfig()
+    config.prepare()
     # FIXME: After this issue resolved
     # https://github.com/makinacorpus/easydict/issues/20
     config = config.cfg
@@ -166,8 +166,8 @@ def train():
 
 def pruning():
     print("[INFO] Set configuration")
-    config = Config()
-    config.prepare_pruning()
+    config = PruningConfig()
+    config.prepare()
     # FIXME: After this issue resolved
     # https://github.com/makinacorpus/easydict/issues/20
     config = config.cfg

@@ -11,7 +11,7 @@ from torchvision.transforms import ToTensor
 from pathlib import Path
 from PIL import Image
 
-from layer import DownSample2DMatlab, UpSample2DMatlab
+from src.layer import DownSample2DMatlab, UpSample2DMatlab
 
 
 def _load_img_array(path, color_mode='RGB',
