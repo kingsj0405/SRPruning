@@ -14,6 +14,7 @@ from tqdm import tqdm
 from config import Config
 from dataset import SRDatasetFromDIV2K
 from model import VDSR
+from loss import get_loss
 from layer import DownSample2DMatlab, UpSample2DMatlab
 from util import psnr_set5
 from pruning import pruning_map, Pruning, RandomPruning, MagnitudePruning, MagnitudeFilterPruning, AttentionPruning
@@ -64,7 +65,7 @@ def train():
         optimizer=optimizer,
         milestones=config.TRAIN.lr_step_milestones,
         gamma=config.TRAIN.lr_step_gamma)
-    criterion = torch.nn.MSELoss().cuda()
+    criterion = get_loss(config.TRAIN.loss)
     # Re-load from checkpoint, this can be rewinding
     if config.TRAIN.resume:
         print(

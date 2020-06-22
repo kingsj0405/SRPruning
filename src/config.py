@@ -13,8 +13,8 @@ class Config:
         self.cfg = EasyDict()
         self.cfg.EXP = EasyDict()
         self.cfg.EXP.path = '/app/NAS2_sejong/SRPruning/vdsr'
-        self.cfg.EXP.version = 'v42'
-        self.cfg.EXP.description = "Rewinding L2NormPruning 0.4"
+        self.cfg.EXP.version = 'v43'
+        self.cfg.EXP.description = "Rewinding L2NormPruning 0.8 with PatchMSELoss"
         self.cfg.EXP.seed = 903
         # Options for save path
         self.cfg.SAVE = EasyDict()
@@ -44,8 +44,9 @@ class Config:
         self.cfg.TRAIN.lr_step_gamma = 0.1
         self.cfg.TRAIN.resume = True
         self.cfg.TRAIN.load_checkpoint_path = f"{self.cfg.EXP.path}/checkpoint/v22/SRPruning_epoch_0.pth"
+        self.cfg.TRAIN.loss = 'PatchMSELoss'
         self.cfg.TRAIN.pruning = True 
-        self.cfg.TRAIN.pruning_version = 'p32'
+        self.cfg.TRAIN.pruning_version = 'p34'
         self.cfg.TRAIN.pruning_dir = f"{self.cfg.EXP.path}/pruning/{self.cfg.TRAIN.pruning_version}"
         ############################################
         # Pruning
