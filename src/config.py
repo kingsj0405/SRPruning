@@ -33,8 +33,8 @@ class TrainingConfig(Config):
         super(TrainingConfig, self).__init__()
         # Experiment settings
         self.cfg.EXP.path = '/app/NAS2_sejong/SRPruning/vdsr'
-        self.cfg.EXP.version = 'v44'
-        self.cfg.EXP.description = "Test TrainingConfig"
+        self.cfg.EXP.version = 'v45'
+        self.cfg.EXP.description = "For README.md"
         # Save Settings
         self.cfg.SAVE = EasyDict()
         self.cfg.SAVE.cfg_dir = f"{self.cfg.EXP.path}/config/"
