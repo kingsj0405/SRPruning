@@ -42,6 +42,12 @@ class TrainingConfig(Config):
         self.cfg.SAVE.save_dir = f"{self.cfg.EXP.path}/samples/{self.cfg.EXP.version}"
         self.cfg.SAVE.checkpoint_dir = f"{self.cfg.EXP.path}/checkpoint/{self.cfg.EXP.version}"
         self.cfg.SAVE.summary_dir = f"{self.cfg.EXP.path}/summary/{self.cfg.EXP.version}"
+        # Options for dataset
+        self.cfg.DATA = EasyDict()
+        self.cfg.DATA.div2k_dir = '../dataset/DIV2K/'
+        self.cfg.DATA.set5_dir = '../dataset/Set5/'
+        self.cfg.DATA.hr_size = 128
+        self.cfg.DATA.lr_size = 32
         # Options for training
         self.cfg.TRAIN = EasyDict()
         self.cfg.TRAIN.batch_size = 64
@@ -58,12 +64,6 @@ class TrainingConfig(Config):
         self.cfg.TRAIN.pruning = True 
         self.cfg.TRAIN.pruning_version = 'p34'
         self.cfg.TRAIN.pruning_dir = f"{self.cfg.EXP.path}/pruning/{self.cfg.TRAIN.pruning_version}"
-        # Options for dataset
-        self.cfg.DATA = EasyDict()
-        self.cfg.DATA.div2k_dir = '../dataset/DIV2K/'
-        self.cfg.DATA.set5_dir = '../dataset/Set5/'
-        self.cfg.DATA.hr_size = 128
-        self.cfg.DATA.lr_size = 32
         # Rewinding or FineTuning
         self.cfg.TRAIN_PRUNE = EasyDict()
         self.cfg.TRAIN_PRUNE.model_parameters = f"{self.cfg.EXP.path}/checkpoint/v22/SRPruning_epoch_10000.pth"
@@ -88,13 +88,17 @@ class PruningConfig(Config):
         super(PruningConfig, self).__init__()
         # General Setting
         self.cfg.EXP.path = '/app/NAS2_sejong/SRPruning/vdsr'
-        self.cfg.EXP.description = "Test pruning_map"
-        self.cfg.EXP.exp_ver = 'p46'
+        self.cfg.EXP.version = 'p47'
+        self.cfg.EXP.description = "Test PruningConfig"
         # Save Setting
         self.cfg.SAVE = EasyDict()
         self.cfg.SAVE.cfg_dir = f"{self.cfg.EXP.path}/config/"
         self.cfg.SAVE.cfg_file_path = f"{self.cfg.EXP.path}/config/{self.cfg.EXP.version}.cfg"
-        self.cfg.SAVE.pruning_dir = f"{self.cfg.EXP.path}/pruning/{self.cfg.PRUNE.exp_ver}"
+        self.cfg.SAVE.pruning_dir = f"{self.cfg.EXP.path}/pruning/{self.cfg.EXP.version}"
+        self.cfg.SAVE.save_dir = f"{self.cfg.EXP.path}/samples/{self.cfg.EXP.version}"
+        # Options for dataset
+        self.cfg.DATA = EasyDict()
+        self.cfg.DATA.set5_dir = '../dataset/Set5/'
         # Pruning Setting
         self.cfg.PRUNE = EasyDict()
         self.cfg.PRUNE.trained_checkpoint_path = f"{self.cfg.EXP.path}/checkpoint/v22/SRPruning_epoch_10000.pth"
@@ -104,11 +108,10 @@ class PruningConfig(Config):
     
     def prepare(self):
         if Path(self.cfg.SAVE.cfg_file_path).exists():
-            print(
-                f"[ERROR] Pruning directory {self.cfg.SAVE.pruning_dir} already exists")
-            print(f"[ERROR] Stop pruning {self.cfg.EXP.exp_ver}")
+            print(f"[ERROR] Configuration {self.cfg.SAVE.cfg_file_path} already exists")
+            print(f"[ERROR] Stop pruning {self.cfg.EXP.version}")
             exit(-1)
         else:
             self._make_directory(self.cfg.SAVE.pruning_dir)
             self._save_config_file(self.cfg.SAVE.cfg_file_path)
-            print(f"[INFO] Experiment {self.cfg.EXP.exp_ver} set up")
+            print(f"[INFO] Experiment {self.cfg.EXP.version} set up")
