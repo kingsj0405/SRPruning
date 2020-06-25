@@ -11,7 +11,7 @@ from torchvision import transforms
 from torchvision.utils import save_image
 from tqdm import tqdm
 
-from model import VDSR, DownSample2DMatlab, UpSample2DMatlab
+from model import get_network, DownSample2DMatlab, UpSample2DMatlab
 from pruning import pruning_map
 from src.config import TrainingConfig, PruningConfig
 from src.dataset import SRDatasetFromDIV2K
@@ -51,7 +51,7 @@ def train():
         batch_size=config.TRAIN.batch_size,
         shuffle=True)
     print("[INFO] Prepare net, optimizer, loss for training")
-    net = VDSR().cuda()
+    net = get_network(config.TRAIN.network).cuda()
     # Use multiple gpus if possible
     if torch.cuda.device_count() > 1:
         print(
@@ -69,11 +69,14 @@ def train():
         print(
             f"[INFO] Load checkpoint from {config.TRAIN.load_checkpoint_path}")
         checkpoint = torch.load(config.TRAIN.load_checkpoint_path)
-        start_epoch = checkpoint['epoch']
-        global_step = checkpoint['global_step']
         net.load_state_dict(checkpoint['net'])
-        optimizer.load_state_dict(checkpoint['optimizer'])
-        scheduler.load_state_dict(checkpoint['scheduler'])
+        start_epoch = 0
+        global_step = 0
+        if config.TRAIN.network == 'VDSR':
+            start_epoch = checkpoint['epoch']
+            global_step = checkpoint['global_step']
+            optimizer.load_state_dict(checkpoint['optimizer'])
+            scheduler.load_state_dict(checkpoint['scheduler'])
     else:
         start_epoch = 0
         global_step = 0
@@ -119,8 +122,7 @@ def train():
             if config.TRAIN.pruning:
                 pruning.zero()
             # Forward
-            bicubic_image = UpSample2DMatlab(lr_image, 4, cuda=True)
-            out = net(bicubic_image)
+            out = net(lr_image)
             loss = criterion(out, hr_image)
             # Back-propagation
             optimizer.zero_grad()
@@ -132,19 +134,19 @@ def train():
             # Add images to tensorboard
             writer.add_images('1 hr', hr_image.clamp(0, 1))
             writer.add_images('2 out', out.clamp(0, 1))
-            writer.add_images('3 bicubic', bicubic_image.clamp(0, 1))
-            # writer.add_images('4 model_output', model_output)# Memory
+            #writer.add_images('3 bicubic', bicubic_image.clamp(0, 1))
+            #writer.add_images('4 model_output', model_output)# Memory
             writer.add_images('5 lr', lr_image.clamp(0, 1))
             # Add values to tensorboard
             writer.add_scalar(
                 '1 MSE', loss.item(), global_step=global_step)
-            app, apb = psnr_set5(net,
+            app = psnr_set5(net,
                                  set5_dir=config.DATA.set5_dir,
                                  save_dir=config.SAVE.save_dir)
             writer.add_scalar(
-                '2 Set5 PSNR VDSR', app, global_step=global_step)
-            writer.add_scalar(
-                '3 Set5 PSNR bicubic', apb, global_step=global_step)
+                '2 Set5 PSNR out', app, global_step=global_step)
+            #writer.add_scalar(
+            #    '3 Set5 PSNR bicubic', apb, global_step=global_step)
             writer.add_scalar(
                 '4 learning rate', optimizer.param_groups[0]['lr'],
                 global_step=global_step)

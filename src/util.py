@@ -98,9 +98,6 @@ def psnr_set5(model, set5_dir, save_dir, save=True):
             bicubic_img = DownSample2DMatlab(label_img, 1 / scale)
             bicubic_img = bicubic_img.clamp(0, 1)
             bicubic_img = torch.round(bicubic_img * 255) / 255
-            bicubic_img = UpSample2DMatlab(bicubic_img, scale)
-            bicubic_img = bicubic_img.clamp(0, 1)
-            bicubic_img = torch.round(bicubic_img * 255) / 255
             predicted_img = model(bicubic_img)
             label_img = label_img.permute(0, 2, 3, 1)
             bicubic_img = bicubic_img.permute(0, 2, 3, 1)
@@ -116,16 +113,12 @@ def psnr_set5(model, set5_dir, save_dir, save=True):
             predicted_img = predicted_img.clip(0, 1)
             predicted_img = (predicted_img * 255).astype(np.uint8)
             # Get psnr of bicubic, predicted
-            psnr_bicubic = psnr(_rgb2ycbcr(label_img)[:, :, 0],
-                                _rgb2ycbcr(bicubic_img)[:, :, 0],
-                                scale)
             psnr_predicted = psnr(_rgb2ycbcr(label_img)[:, :, 0],
                                   _rgb2ycbcr(predicted_img)[:, :, 0],
                                   scale)
-            avg_psnr_bicubic += psnr_bicubic
             avg_psnr_predicted += psnr_predicted
             # Save image
             if save:
                 Image.fromarray(predicted_img).save(
                     f"{save_dir}/Set5_{image_path.stem}.png")
-    return (avg_psnr_predicted / count), (avg_psnr_bicubic / count)
+    return (avg_psnr_predicted / count)
