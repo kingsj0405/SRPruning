@@ -33,8 +33,8 @@ class TrainingConfig(Config):
         super(TrainingConfig, self).__init__()
         # Experiment settings
         self.cfg.EXP.path = '/app/NAS2_sejong/SRPruning/CARN'
-        self.cfg.EXP.version = 'v1'
-        self.cfg.EXP.description = "Training with learning rate 1e-4"
+        self.cfg.EXP.version = 'v4'
+        self.cfg.EXP.description = "Training with learning rate 1e-5"
         # Save Settings
         self.cfg.SAVE = EasyDict()
         self.cfg.SAVE.cfg_dir = f"{self.cfg.EXP.path}/config/"
@@ -55,8 +55,8 @@ class TrainingConfig(Config):
         self.cfg.TRAIN.end_epoch = 10000
         self.cfg.TRAIN.period_log = 5  # epoch
         self.cfg.TRAIN.period_save = 500  # epoch
-        self.cfg.TRAIN.learning_rate = 1e-4
-        self.cfg.TRAIN.lr_step_milestones = [10000 * (x + 1) for x in range(int(10000 / 10000))]
+        self.cfg.TRAIN.learning_rate = 1e-5
+        self.cfg.TRAIN.lr_step_milestones = [10000]
         self.cfg.TRAIN.lr_step_gamma = 0.1
         self.cfg.TRAIN.resume = False
         self.cfg.TRAIN.load_checkpoint_path = f"{self.cfg.EXP.path}/checkpoint/v0/PrunedMSRResNetx4.pth"
