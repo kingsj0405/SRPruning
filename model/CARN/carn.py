@@ -8,12 +8,12 @@ class Block(nn.Module):
                  group=1):
         super(Block, self).__init__()
 
-        self.b1 = ops.ResidualBlock(6, 6)
-        self.b2 = ops.ResidualBlock(6, 6)
-        self.b3 = ops.ResidualBlock(6, 6)
-        self.c1 = ops.BasicBlock(6*2, 6, 1, 1, 0)
-        self.c2 = ops.BasicBlock(6*3, 6, 1, 1, 0)
-        self.c3 = ops.BasicBlock(6*4, 6, 1, 1, 0)
+        self.b1 = ops.ResidualBlock(12, 12)
+        self.b2 = ops.ResidualBlock(12, 12)
+        self.b3 = ops.ResidualBlock(12, 12)
+        self.c1 = ops.BasicBlock(12*2, 12, 1, 1, 0)
+        self.c2 = ops.BasicBlock(12*3, 12, 1, 1, 0)
+        self.c3 = ops.BasicBlock(12*4, 12, 1, 1, 0)
 
     def forward(self, x):
         c0 = o0 = x
@@ -93,19 +93,19 @@ class PrunedNet(nn.Module):
         self.sub_mean = ops.MeanShift((0.4488, 0.4371, 0.4040), sub=True)
         self.add_mean = ops.MeanShift((0.4488, 0.4371, 0.4040), sub=False)
         
-        self.entry = nn.Conv2d(3, 6, 3, 1, 1)
+        self.entry = nn.Conv2d(3, 12, 3, 1, 1)
 
-        self.b1 = Block(6, 6)
-        self.b2 = Block(6, 6)
-        self.b3 = Block(6, 6)
-        self.c1 = ops.BasicBlock(6 * 2, 6, 1, 1, 0)
-        self.c2 = ops.BasicBlock(6 * 3, 6, 1, 1, 0)
-        self.c3 = ops.BasicBlock(6 * 4, 6, 1, 1, 0)
+        self.b1 = Block(12, 12)
+        self.b2 = Block(12, 12)
+        self.b3 = Block(12, 12)
+        self.c1 = ops.BasicBlock(12 * 2, 12, 1, 1, 0)
+        self.c2 = ops.BasicBlock(12 * 3, 12, 1, 1, 0)
+        self.c3 = ops.BasicBlock(12 * 4, 12, 1, 1, 0)
         
-        self.upsample = ops.UpsampleBlock(6, scale=scale, 
+        self.upsample = ops.UpsampleBlock(12, scale=scale, 
                                           multi_scale=multi_scale,
                                           group=group)
-        self.exit = nn.Conv2d(6, 3, 3, 1, 1)
+        self.exit = nn.Conv2d(12, 3, 3, 1, 1)
                 
     def forward(self, x, scale=4):
         x = self.sub_mean(x)
