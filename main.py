@@ -58,7 +58,6 @@ def train():
     if torch.cuda.device_count() > 1:
         print(
             f"[INFO] Use multiple gpus with count {torch.cuda.device_count()}")
-    net = torch.nn.DataParallel(net)
     optimizer = torch.optim.Adam(
         net.parameters(), lr=config.TRAIN.learning_rate)
     scheduler = torch.optim.lr_scheduler.MultiStepLR(
@@ -68,10 +67,10 @@ def train():
     criterion = get_loss(config.TRAIN.loss)
     # Re-load from checkpoint, this can be rewinding
     if config.TRAIN.resume:
-        print(
-            f"[INFO] Load checkpoint from {config.TRAIN.load_checkpoint_path}")
+        print(f"[INFO] Load checkpoint from {config.TRAIN.load_checkpoint_path}")
         checkpoint = torch.load(config.TRAIN.load_checkpoint_path)
         net.load_state_dict(checkpoint['net'])
+        net = torch.nn.DataParallel(net)
         start_epoch = 0
         global_step = 0
         if config.TRAIN.network == 'VDSR':

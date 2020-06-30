@@ -1,12 +1,13 @@
 from model.vdsr import VDSR
 from model.MSRResNet import MSRResNet, PrunedMSRResNet
-from model.CARN import CARN
+from model.CARN import CARN, PrunedCARN
 from model.layer import DownSample2DMatlab, UpSample2DMatlab
 
 network_map = {
     'VDSR': VDSR(),
     'PrunedMSRResNet': PrunedMSRResNet(),
-    'CARN': CARN(multi_scale=4, group=1),
+    'CARN': CARN(scale=4, group=1),
+    'PrunedCARN': PrunedCARN(multi_scale=4, group=1)
 }
 
 def get_network(name):
