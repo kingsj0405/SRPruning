@@ -8,6 +8,7 @@ network_map = {
     'PrunedMSRResNet': PrunedMSRResNet(),
     'CARN': CARN(scale=4, group=1),
     'PCARN18': CARN(multi_scale=4, group=1, channel_cnt=18),
+    'PCARN32': CARN(multi_scale=4, group=1, channel_cnt=32),
 }
 
 def get_network(name):
