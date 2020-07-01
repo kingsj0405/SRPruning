@@ -33,8 +33,8 @@ class TrainingConfig(Config):
         super(TrainingConfig, self).__init__()
         # Experiment settings
         self.cfg.EXP.path = '/app/NAS2_sejong/SRPruning/CARN'
-        self.cfg.EXP.version = 'v6'
-        self.cfg.EXP.description = "Fine tuning, 0.8"
+        self.cfg.EXP.version = 'v7'
+        self.cfg.EXP.description = "Fine tuning, 0.7"
         # Save Settings
         self.cfg.SAVE = EasyDict()
         self.cfg.SAVE.cfg_dir = f"{self.cfg.EXP.path}/config/"
@@ -59,8 +59,8 @@ class TrainingConfig(Config):
         self.cfg.TRAIN.lr_step_milestones = [5000, 8000]
         self.cfg.TRAIN.lr_step_gamma = 0.1
         self.cfg.TRAIN.resume = True
-        self.cfg.TRAIN.load_checkpoint_path = f"{self.cfg.EXP.path}/checkpoint/v0/PrunedCARN_12.pth"
-        self.cfg.TRAIN.network = 'PrunedCARN'
+        self.cfg.TRAIN.load_checkpoint_path = f"{self.cfg.EXP.path}/checkpoint/v0/PrunedCARN_18.pth"
+        self.cfg.TRAIN.network = 'PCARN18'
         self.cfg.TRAIN.loss = 'MSELoss'
         self.cfg.TRAIN.pruning = False
         self.cfg.TRAIN.pruning_version = 'p34'
