@@ -15,7 +15,7 @@ class Config:
         self.cfg.EXP.path = None        # Set on child class
         self.cfg.EXP.version = None     # Set on child class
         self.cfg.EXP.description = None # Set on child class
-        self.cfg.EXP.seed = 903
+        self.cfg.EXP.seed = 510
        
     def _make_directory(self, path):
         print(f"[INFO] Make directory {path}")
@@ -33,7 +33,7 @@ class TrainingConfig(Config):
         super(TrainingConfig, self).__init__()
         # Experiment settings
         self.cfg.EXP.path = '/app/NAS2_sejong/SRPruning/CARN'
-        self.cfg.EXP.version = 'v9'
+        self.cfg.EXP.version = 'v13'
         self.cfg.EXP.description = "Rewinding, 0.7"
         # Save Settings
         self.cfg.SAVE = EasyDict()
