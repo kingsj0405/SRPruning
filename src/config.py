@@ -61,7 +61,7 @@ class TrainingConfig(Config):
         self.cfg.TRAIN.resume = False
         self.cfg.TRAIN.load_checkpoint_path = f"{self.cfg.EXP.path}/checkpoint/v0/PrunedCARN_32.pth"
         self.cfg.TRAIN.network = 'SRDenseNet'
-        self.cfg.TRAIN.loss = 'MSELoss'
+        self.cfg.TRAIN.loss = 'CharbonnierLoss'
         self.cfg.TRAIN.pruning = False
         self.cfg.TRAIN.pruning_version = 'p34'
         self.cfg.TRAIN.pruning_dir = f"{self.cfg.EXP.path}/pruning/{self.cfg.TRAIN.pruning_version}"

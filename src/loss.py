@@ -98,9 +98,23 @@ def localPatchDist(batch_S, batch_H, k_size=5, s_size=9):
     return fold_H_selected.detach(), hit_self, hit_others
 
 
+class L1_Charbonnier_loss(torch.nn.Module):
+    """L1 Charbonnierloss."""
+    def __init__(self):
+        super(L1_Charbonnier_loss, self).__init__()
+        self.eps = 1e-6
+
+    def forward(self, X, Y):
+        diff = torch.add(X, -Y)
+        error = torch.sqrt( diff * diff + self.eps )
+        loss = torch.sum(error) 
+        return loss 
+
+
 loss_map = {
     'PatchMSELoss': PatchMSELoss,
-    'MSELoss': torch.nn.MSELoss()
+    'MSELoss': torch.nn.MSELoss(),
+    'CharbonnierLoss': L1_Charbonnier_loss(),
 }
 
 
