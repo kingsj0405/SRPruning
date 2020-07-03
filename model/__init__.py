@@ -8,6 +8,8 @@ network_map = {
     'VDSR': VDSR(),
     'PrunedMSRResNet': PrunedMSRResNet(),
     'CARN': CARN(scale=4, group=1),
+    'PCARN6': CARN(multi_scale=4, group=1, channel_cnt=6),
+    'PCARN12': CARN(multi_scale=4, group=1, channel_cnt=12),
     'PCARN18': CARN(multi_scale=4, group=1, channel_cnt=18),
     'PCARN32': CARN(multi_scale=4, group=1, channel_cnt=32),
     'SRDenseNet': SRDenseNet(),
