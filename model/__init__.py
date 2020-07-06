@@ -7,6 +7,7 @@ from model.layer import DownSample2DMatlab, UpSample2DMatlab
 
 network_map = {
     'VDSR': VDSR(),
+    'MSRResNet': MSRResNet(),
     'PrunedMSRResNet': PrunedMSRResNet(),
     'CARN': CARN(scale=4, group=1),
     'PCARN6': CARN(multi_scale=4, group=1, channel_cnt=6),
