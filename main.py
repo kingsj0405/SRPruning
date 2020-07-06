@@ -113,6 +113,7 @@ def train():
         'optimizer': optimizer.state_dict(),
         'scheduler': scheduler.state_dict(),
     }, f"{config.SAVE.checkpoint_dir}/SRPruning_epoch_0.pth")
+    net_parallel = torch.nn.DataParallel(net)
     for epoch in tqdm(range(start_epoch + 1,
                             config.TRAIN.end_epoch + 1), position=0, leave=True):
         for index, hr_image in enumerate(tqdm(train_dataloader, position=1, leave=False)):
@@ -123,7 +124,7 @@ def train():
             if config.TRAIN.pruning:
                 pruning.zero()
             # Forward
-            out = net(lr_image)
+            out = net_parallel(lr_image)
             loss = criterion(out, hr_image)
             # Back-propagation
             optimizer.zero_grad()
