@@ -4,6 +4,7 @@ from model.CARN import CARN
 from model.srdensenet import Net as SRDenseNet
 from model.rdn import RDN
 from model.RRDBNet_arch import RRDBNet
+from model.RCAN import RCAN
 from model.layer import DownSample2DMatlab, UpSample2DMatlab
 
 network_map = {
@@ -19,6 +20,7 @@ network_map = {
     'RDN': RDN(scale_factor=4, num_channels=3, num_features=64,
                growth_rate=64, num_blocks=16, num_layers=8),
     'RRDB': RRDBNet(3, 3, 64, 23, gc=32),
+    'RCAN': RCAN
 }
 
 def get_network(name):
