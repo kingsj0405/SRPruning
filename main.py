@@ -72,15 +72,12 @@ def train():
         net.load_state_dict(checkpoint['net'])
         net = torch.nn.DataParallel(net)
         start_epoch = 0
-        global_step = 0
         if config.TRAIN.network == 'VDSR':
             start_epoch = checkpoint['epoch']
-            global_step = checkpoint['global_step']
             optimizer.load_state_dict(checkpoint['optimizer'])
             scheduler.load_state_dict(checkpoint['scheduler'])
     else:
         start_epoch = 0
-        global_step = 0
     # Set pruning mask
     if config.TRAIN.pruning:
         json_path = f"{config.TRAIN.pruning_dir}/pruning-report.json"
@@ -108,7 +105,6 @@ def train():
     torch.save({
         'config': config,
         'epoch': 0,
-        'global_step': global_step,
         'net': net.state_dict(),
         'optimizer': optimizer.state_dict(),
         'scheduler': scheduler.state_dict(),
@@ -130,8 +126,6 @@ def train():
             optimizer.zero_grad()
             loss.backward()
             optimizer.step()
-            # Add count
-            global_step += config.TRAIN.batch_size
         if epoch == 1 or epoch % config.TRAIN.period_log == 0:
             # Add images to tensorboard
             writer.add_images('1 hr', hr_image.clamp(0, 1))
@@ -141,24 +135,23 @@ def train():
             writer.add_images('5 lr', lr_image.clamp(0, 1))
             # Add values to tensorboard
             writer.add_scalar(
-                '1 MSE', loss.item(), global_step=global_step)
+                '1 MSE', loss.item(), global_step=epoch)
             app = util.psnr_set5(net,
                                  set5_dir=config.DATA.set5_dir,
                                  save_dir=config.SAVE.save_dir)
             writer.add_scalar(
-                '2 Set5 PSNR out', app, global_step=global_step)
+                '2 Set5 PSNR out', app, global_step=epoch)
             #writer.add_scalar(
-            #    '3 Set5 PSNR bicubic', apb, global_step=global_step)
+            #    '3 Set5 PSNR bicubic', apb, global_step=epoch)
             writer.add_scalar(
                 '4 learning rate', optimizer.param_groups[0]['lr'],
-                global_step=global_step)
+                global_step=epoch)
             writer.flush()
         if epoch % config.TRAIN.period_save == 0:
             # Save checkpoint
             torch.save({
                 'config': config,
                 'epoch': epoch,
-                'global_step': global_step,
                 'net': net.state_dict(),
                 'optimizer': optimizer.state_dict(),
                 'scheduler': scheduler.state_dict(),
