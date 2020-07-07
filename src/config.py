@@ -33,7 +33,7 @@ class TrainingConfig(Config):
         super(TrainingConfig, self).__init__()
         # Experiment settings
         self.cfg.EXP.path = '/app/NAS2_sejong/SRPruning/RCAN'
-        self.cfg.EXP.version = 'v2'
+        self.cfg.EXP.version = 'v1'
         self.cfg.EXP.description = "RCAN training"
         # Save Settings
         self.cfg.SAVE = EasyDict()
@@ -55,7 +55,7 @@ class TrainingConfig(Config):
         self.cfg.TRAIN.end_epoch = 10000
         self.cfg.TRAIN.period_log = 5  # epoch
         self.cfg.TRAIN.period_save = 500  # epoch
-        self.cfg.TRAIN.learning_rate = 1e-4
+        self.cfg.TRAIN.learning_rate = 1e-3
         self.cfg.TRAIN.lr_step_milestones = [5000, 8000]
         self.cfg.TRAIN.lr_step_gamma = 0.1
         self.cfg.TRAIN.resume = False
