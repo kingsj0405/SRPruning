@@ -32,9 +32,9 @@ class TrainingConfig(Config):
     def __init__(self):
         super(TrainingConfig, self).__init__()
         # Experiment settings
-        self.cfg.EXP.path = '/app/NAS2_sejong/SRPruning/RCAN'
-        self.cfg.EXP.version = 'v2'
-        self.cfg.EXP.description = "RCAN training"
+        self.cfg.EXP.path = '/app/NAS2_sejong/SRPruning/RDN'
+        self.cfg.EXP.version = 'v4'
+        self.cfg.EXP.description = "Rdn training, with many technique"
         # Save Settings
         self.cfg.SAVE = EasyDict()
         self.cfg.SAVE.cfg_dir = f"{self.cfg.EXP.path}/config/"
@@ -55,12 +55,12 @@ class TrainingConfig(Config):
         self.cfg.TRAIN.end_epoch = 10000
         self.cfg.TRAIN.period_log = 5  # epoch
         self.cfg.TRAIN.period_save = 500  # epoch
-        self.cfg.TRAIN.learning_rate = 1e-4
-        self.cfg.TRAIN.lr_step_milestones = [5000, 8000]
+        self.cfg.TRAIN.learning_rate = 1e-3
+        self.cfg.TRAIN.lr_step_milestones = [3000, 6000]
         self.cfg.TRAIN.lr_step_gamma = 0.1
         self.cfg.TRAIN.resume = False
         self.cfg.TRAIN.load_checkpoint_path = f"{self.cfg.EXP.path}/checkpoint/v0/PrunedCARN_12_rewinded.pth"
-        self.cfg.TRAIN.network = 'RCAN'
+        self.cfg.TRAIN.network = 'RDN'
         self.cfg.TRAIN.loss = 'MSELoss'
         self.cfg.TRAIN.pruning = False
         self.cfg.TRAIN.pruning_version = 'p34'
