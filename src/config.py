@@ -55,8 +55,8 @@ class TrainingConfig(Config):
         self.cfg.TRAIN.end_epoch = 10000
         self.cfg.TRAIN.period_log = 5  # epoch
         self.cfg.TRAIN.period_save = 500  # epoch
-        self.cfg.TRAIN.learning_rate = 1e-3
-        self.cfg.TRAIN.lr_step_milestones = [3000, 6000]
+        self.cfg.TRAIN.learning_rate = 1e-4
+        self.cfg.TRAIN.lr_step_milestones = [5000, 8000]
         self.cfg.TRAIN.lr_step_gamma = 0.1
         self.cfg.TRAIN.resume = False
         self.cfg.TRAIN.load_checkpoint_path = f"{self.cfg.EXP.path}/checkpoint/v0/PrunedCARN_12_rewinded.pth"
