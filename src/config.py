@@ -33,7 +33,7 @@ class TrainingConfig(Config):
         super(TrainingConfig, self).__init__()
         # Experiment settings
         self.cfg.EXP.path = '/app/NAS2_sejong/SRPruning/RDN'
-        self.cfg.EXP.version = 'v5'
+        self.cfg.EXP.version = 'v7'
         self.cfg.EXP.description = "RDN rewinding 0.8"
         # Save Settings
         self.cfg.SAVE = EasyDict()
@@ -59,8 +59,8 @@ class TrainingConfig(Config):
         self.cfg.TRAIN.lr_step_milestones = [5000, 8000]
         self.cfg.TRAIN.lr_step_gamma = 0.1
         self.cfg.TRAIN.resume = True
-        self.cfg.TRAIN.load_checkpoint_path = f"{self.cfg.EXP.path}/checkpoint/v0/PRDN_6_rewinded.pth"
-        self.cfg.TRAIN.network = 'PRDN_6'
+        self.cfg.TRAIN.load_checkpoint_path = f"{self.cfg.EXP.path}/checkpoint/v0/PRDN_12_rewinded.pth"
+        self.cfg.TRAIN.network = 'PRDN_12'
         self.cfg.TRAIN.loss = 'MSELoss'
         self.cfg.TRAIN.pruning = False
         self.cfg.TRAIN.pruning_version = 'p34'
