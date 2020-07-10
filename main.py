@@ -72,13 +72,12 @@ def train():
         print(f"[INFO] Load checkpoint from {config.TRAIN.load_checkpoint_path}")
         checkpoint = torch.load(config.TRAIN.load_checkpoint_path)
         net.load_state_dict(checkpoint['net'])
-        net = torch.nn.DataParallel(net)
         start_epoch = 0
         if config.TRAIN.network in ['VDSR']:
             start_epoch = checkpoint['epoch']
             optimizer.load_state_dict(checkpoint['optimizer'])
             scheduler.load_state_dict(checkpoint['scheduler'])
-        if config.TRAIN.network in ['RCAN']:
+        if config.TRAIN.network in ['RCAN', 'RRDB']:
             start_epoch = checkpoint['epoch']
             optimizer.load_state_dict(checkpoint['optimizer'])
     else:
