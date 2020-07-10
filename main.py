@@ -74,10 +74,13 @@ def train():
         net.load_state_dict(checkpoint['net'])
         net = torch.nn.DataParallel(net)
         start_epoch = 0
-        if config.TRAIN.network in ['VDSR', 'RCAN']:
+        if config.TRAIN.network in ['VDSR']:
             start_epoch = checkpoint['epoch']
             optimizer.load_state_dict(checkpoint['optimizer'])
             scheduler.load_state_dict(checkpoint['scheduler'])
+        if config.TRAIN.network in ['RCAN']:
+            start_epoch = checkpoint['epoch']
+            optimizer.load_state_dict(checkpoint['optimizer'])
     else:
         start_epoch = 0
     # Set pruning mask
