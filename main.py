@@ -74,7 +74,7 @@ def train():
         net.load_state_dict(checkpoint['net'])
         net = torch.nn.DataParallel(net)
         start_epoch = 0
-        if config.TRAIN.network == 'VDSR':
+        if config.TRAIN.network in ['VDSR', 'RCAN']:
             start_epoch = checkpoint['epoch']
             optimizer.load_state_dict(checkpoint['optimizer'])
             scheduler.load_state_dict(checkpoint['scheduler'])
