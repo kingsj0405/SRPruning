@@ -19,6 +19,7 @@ from pruning import pruning_map
 from src.config import TrainingConfig, PruningConfig
 from src.dataset import SRDatasetFromDIV2K
 from src.loss import get_loss
+from src.transforms import RandomRotation
 
 
 def train():
@@ -38,6 +39,7 @@ def train():
                                        transforms.RandomCrop(
                                            [config.DATA.hr_size, config.DATA.hr_size]),
                                        transforms.RandomRotation(180),
+                                       #RandomRotation(angles=[0, 90, 180, 270]),
                                        transforms.RandomHorizontalFlip(),
                                        transforms.RandomVerticalFlip(),
                                        transforms.ToTensor()]),
@@ -45,6 +47,7 @@ def train():
                                        transforms.RandomCrop(
                                            [config.DATA.lr_size, config.DATA.lr_size]),
                                        transforms.RandomRotation(180),
+                                       #RandomRotation(angles=[0, 90, 180, 270]),
                                        transforms.RandomHorizontalFlip(),
                                        transforms.RandomVerticalFlip(),
                                        transforms.ToTensor()
