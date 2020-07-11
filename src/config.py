@@ -33,8 +33,8 @@ class TrainingConfig(Config):
         super(TrainingConfig, self).__init__()
         # Experiment settings
         self.cfg.EXP.path = '/app/NAS2_sejong/SRPruning/RDN'
-        self.cfg.EXP.version = 'v12'
-        self.cfg.EXP.description = "RDN Iterative Manitude Pruning 0.1 * 5(v8, v9,v10,v11)"
+        self.cfg.EXP.version = 'v13'
+        self.cfg.EXP.description = "RDN Iterative Manitude Pruning 0.1 * 6(v8, v9,v10,v11,v12)"
         # Save Settings
         self.cfg.SAVE = EasyDict()
         self.cfg.SAVE.cfg_dir = f"{self.cfg.EXP.path}/config/"
@@ -59,8 +59,8 @@ class TrainingConfig(Config):
         self.cfg.TRAIN.lr_step_milestones = [10000]
         self.cfg.TRAIN.lr_step_gamma = 0.1
         self.cfg.TRAIN.resume = True
-        self.cfg.TRAIN.load_checkpoint_path = f"{self.cfg.EXP.path}/checkpoint/v0/PRDN_36_rewinded5.pth"
-        self.cfg.TRAIN.network = 'PRDN_34'
+        self.cfg.TRAIN.load_checkpoint_path = f"{self.cfg.EXP.path}/checkpoint/v0/PRDN_28_rewinded6.pth"
+        self.cfg.TRAIN.network = 'PRDN_28'
         self.cfg.TRAIN.loss = 'MSELoss'
         self.cfg.TRAIN.pruning = False
         self.cfg.TRAIN.pruning_version = 'p34'
