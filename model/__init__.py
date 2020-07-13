@@ -41,6 +41,7 @@ network_map = {
                   growth_rate=6, num_blocks=16, num_layers=8),
     'RRDB': RRDBNet(3, 3, 64, 23, gc=32),
     'RRDB_48': RRDBNet(3, 3, 48, 23, gc=24),
+    'RRDB_8': RRDBNet(3, 3, 8, 23, gc=4),
     'RCAN': RCAN(),
 }
 
