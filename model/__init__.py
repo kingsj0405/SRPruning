@@ -33,6 +33,8 @@ network_map = {
                    growth_rate=32, num_blocks=16, num_layers=8),
     'PRDN_28': RDN(scale_factor=4, num_channels=3, num_features=28,
                    growth_rate=28, num_blocks=16, num_layers=8),
+    'PRDN_22': RDN(scale_factor=4, num_channels=3, num_features=22,
+                   growth_rate=22, num_blocks=16, num_layers=8),
     'PRDN_12': RDN(scale_factor=4, num_channels=3, num_features=12,
                    growth_rate=12, num_blocks=16, num_layers=8),
     'PRDN_6': RDN(scale_factor=4, num_channels=3, num_features=6,
