@@ -55,7 +55,7 @@ class TrainingConfig(Config):
         self.cfg.TRAIN.end_epoch = 30000
         self.cfg.TRAIN.period_log = 5  # epoch
         self.cfg.TRAIN.period_save = 500  # epoch
-        self.cfg.TRAIN.learning_rate = 2e-3
+        self.cfg.TRAIN.learning_rate = 2e-4
         self.cfg.TRAIN.lr_step_milestones = [4000, 8000, 12000, 16000]
         self.cfg.TRAIN.lr_step_gamma = 0.5
         self.cfg.TRAIN.resume = True
