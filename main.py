@@ -38,16 +38,14 @@ def train():
                                    transform=transforms.Compose([
                                        transforms.RandomCrop(
                                            [config.DATA.hr_size, config.DATA.hr_size]),
-                                       transforms.RandomRotation(180),
-                                       #RandomRotation(angles=[0, 90, 180, 270]),
+                                       RandomRotation(angles=[0, 90, 180, 270]),
                                        transforms.RandomHorizontalFlip(),
                                        transforms.RandomVerticalFlip(),
                                        transforms.ToTensor()]),
                                    transform_lr=transforms.Compose([
                                        transforms.RandomCrop(
                                            [config.DATA.lr_size, config.DATA.lr_size]),
-                                       transforms.RandomRotation(180),
-                                       #RandomRotation(angles=[0, 90, 180, 270]),
+                                       RandomRotation(angles=[0, 90, 180, 270]),
                                        transforms.RandomHorizontalFlip(),
                                        transforms.RandomVerticalFlip(),
                                        transforms.ToTensor()

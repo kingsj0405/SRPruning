@@ -48,6 +48,7 @@ network_map = {
     'RRDB_32': RRDBNet(3, 3, 32, 23, gc=16),
     'RRDB_16': RRDBNet(3, 3, 16, 23, gc=8),
     'RRDB_8': RRDBNet(3, 3, 8, 23, gc=4),
+    'RRDB_4': RRDBNet(3, 3, 4, 23, gc=2),
     'RCAN': RCAN(),
 }
 
