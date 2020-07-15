@@ -5,6 +5,7 @@ from model.srdensenet import Net as SRDenseNet
 from model.rdn import RDN
 from model.RRDBNet_arch import RRDBNet
 from model.RCAN import RCAN
+from model.ESRNet import ESRNet
 from model.layer import DownSample2DMatlab, UpSample2DMatlab
 
 network_map = {
@@ -49,6 +50,7 @@ network_map = {
     'RRDB_16': RRDBNet(3, 3, 16, 23, gc=8),
     'RRDB_8': RRDBNet(3, 3, 8, 23, gc=4),
     'RRDB_4': RRDBNet(3, 3, 4, 23, gc=2),
+    'ESRNet': ESRNet(),
     'RCAN': RCAN(),
 }
 

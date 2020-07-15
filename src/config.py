@@ -33,8 +33,8 @@ class TrainingConfig(Config):
         super(TrainingConfig, self).__init__()
         # Experiment settings
         self.cfg.EXP.path = '/app/NAS2_sejong/SRPruning/RRDB'
-        self.cfg.EXP.version = 'v12'
-        self.cfg.EXP.description = "RRDB synflow to 4"#RRDB IMP 0.25 * 1(v2-v4)"#"RDN Iterative Manitude Pruning 0.1 * 7(v8, v9,v10,v11,v12,v13)"
+        self.cfg.EXP.version = 'v16'
+        self.cfg.EXP.description = "RRDB SRFlow 4"#RRDB IMP 0.25 * 1(v2-v4)"#"RDN Iterative Manitude Pruning 0.1 * 7(v8, v9,v10,v11,v12,v13)"
         # Save Settings
         self.cfg.SAVE = EasyDict()
         self.cfg.SAVE.cfg_dir = f"{self.cfg.EXP.path}/config/"
@@ -56,10 +56,10 @@ class TrainingConfig(Config):
         self.cfg.TRAIN.period_log = 5  # epoch
         self.cfg.TRAIN.period_save = 500  # epoch
         self.cfg.TRAIN.learning_rate = 2e-4
-        self.cfg.TRAIN.lr_step_milestones = [4000, 8000, 12000, 16000]
+        self.cfg.TRAIN.lr_step_milestones = [30000]
         self.cfg.TRAIN.lr_step_gamma = 0.5
         self.cfg.TRAIN.resume = True
-        self.cfg.TRAIN.load_checkpoint_path = f"{self.cfg.EXP.path}/checkpoint/v0/RRDB_4_synflow2.pth"
+        self.cfg.TRAIN.load_checkpoint_path = f"{self.cfg.EXP.path}/checkpoint/v0/RRDB_4_srflow.pth"
         self.cfg.TRAIN.network = 'RRDB_4'
         self.cfg.TRAIN.loss = 'MSELoss'
         self.cfg.TRAIN.pruning = False
