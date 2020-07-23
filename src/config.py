@@ -32,9 +32,9 @@ class TrainingConfig(Config):
     def __init__(self):
         super(TrainingConfig, self).__init__()
         # Experiment settings
-        self.cfg.EXP.path = '/app/NAS2_sejong/SRPruning/vdsr'
-        self.cfg.EXP.version = 'v45'
-        self.cfg.EXP.description = "For README.md"
+        self.cfg.EXP.path = '/app/NAS2_sejong/SRPruning/RRDB'
+        self.cfg.EXP.version = 'v20'
+        self.cfg.EXP.description = "RRDB random 8"#RRDB IMP 0.25 * 1(v2-v4)"#"RDN Iterative Manitude Pruning 0.1 * 7(v8, v9,v10,v11,v12,v13)"
         # Save Settings
         self.cfg.SAVE = EasyDict()
         self.cfg.SAVE.cfg_dir = f"{self.cfg.EXP.path}/config/"
@@ -50,18 +50,19 @@ class TrainingConfig(Config):
         self.cfg.DATA.lr_size = 32
         # Options for training
         self.cfg.TRAIN = EasyDict()
-        self.cfg.TRAIN.batch_size = 64
+        self.cfg.TRAIN.batch_size = 16
         self.cfg.TRAIN.dataloader_num_worker = 16
-        self.cfg.TRAIN.end_epoch = 10000
-        self.cfg.TRAIN.period_log = 5  # epoch
-        self.cfg.TRAIN.period_save = 500  # epoch
-        self.cfg.TRAIN.learning_rate = 1e-4
-        self.cfg.TRAIN.lr_step_milestones = [10000 * (x + 1) for x in range(int(10000 / 10000))]
-        self.cfg.TRAIN.lr_step_gamma = 0.1
+        self.cfg.TRAIN.end_epoch = 30000
+        self.cfg.TRAIN.period_log = 5 # epoch
+        self.cfg.TRAIN.period_save = 500 # epoch
+        self.cfg.TRAIN.learning_rate = 2e-4
+        self.cfg.TRAIN.lr_step_milestones = [10000, 20000]
+        self.cfg.TRAIN.lr_step_gamma = 0.5
         self.cfg.TRAIN.resume = True
-        self.cfg.TRAIN.load_checkpoint_path = f"{self.cfg.EXP.path}/checkpoint/v22/SRPruning_epoch_0.pth"
-        self.cfg.TRAIN.loss = 'PatchMSELoss'
-        self.cfg.TRAIN.pruning = True 
+        self.cfg.TRAIN.load_checkpoint_path = f"{self.cfg.EXP.path}/checkpoint/v0/RRDB_8_random.pth"
+        self.cfg.TRAIN.network = 'RRDB_8'
+        self.cfg.TRAIN.loss = 'MSELoss'
+        self.cfg.TRAIN.pruning = False
         self.cfg.TRAIN.pruning_version = 'p34'
         self.cfg.TRAIN.pruning_dir = f"{self.cfg.EXP.path}/pruning/{self.cfg.TRAIN.pruning_version}"
         # Rewinding or FineTuning
